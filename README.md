@@ -1,7 +1,7 @@
 <div align="center">
 
 # CoVR: Composed Video Retrieval
-## Learning Composed Video Retrieval from Web Video Captions t
+## Learning Composed Video Retrieval from Web Video Captions a
 
 <a href="http://lucasventura.com/"><strong>Lucas Ventura</strong></a>
 ·
