@@ -94,8 +94,8 @@ def main(args):
 
     for imgs, video_ids in tqdm(loader):
         imgs = imgs.to(device)
-        sample = sample = {"image": imgs, "text_input": None}
-        img_embs = model.model.extract_features(imgs)
+        sample = {"image": imgs, "text_input": None}
+        img_embs = model.model.extract_features(sample,mode="image")
         img_feats = F.normalize(img_embs.image_embeds_proj[:, 0, :], dim=-1).cpu()
 
         for img_feat, video_id in zip(img_feats, video_ids):
