@@ -7,7 +7,7 @@ from torch import nn
 from transformers.models.bert.configuration_bert import BertConfig
 
 from lavis.models import load_model_and_preprocess
-from src.model.blip import create_vit, init_tokenizer, load_checkpoint
+
 from src.model.med import BertModel
 from src.tools.utils import print_dist
 
@@ -17,12 +17,12 @@ class BLIP2Cir(nn.Module):
         self,
         loss: Any,
         med_config="configs/med_config.json",
-        image_size=384,
-        vit="large",
-        vit_grad_ckpt=True,
-        vit_ckpt_layer=12,
+        image_size=224,
+        name="blip2_feature_extractor",
+        model_type = "pretrained",
         embed_dim=256,
-        train_vit=False,
+        is_eval = False,
+        train_vit = False
     ):
         """
         Args:
@@ -33,19 +33,12 @@ class BLIP2Cir(nn.Module):
         super().__init__()
 
         self.loss = loss
+        self.model, self.vis_processors, self.txt_processors = load_model_and_preprocess(name=name, model_type=model_type,is_eval = is_eval)
+        self.visual_encoder = self.model.visual_encoder
+        self.embed_dim = embed_dim
 
-        self.visual_encoder, vision_width = create_vit(
-            vit, image_size, vit_grad_ckpt, vit_ckpt_layer
-        )
-        self.tokenizer = init_tokenizer()
-        med_config = BertConfig.from_json_file(med_config)
-        med_config.encoder_width = vision_width
-        self.text_encoder = BertModel(config=med_config, add_pooling_layer=False)
+        self.temp = nn.Parameter(0.07 * torch.ones([]))
 
-        text_width = self.text_encoder.config.hidden_size
-
-        self.vision_proj = nn.Linear(vision_width, embed_dim)
-        self.text_proj = nn.Linear(text_width, embed_dim)
 
         self.train_vit = train_vit
         if not self.train_vit:
@@ -53,7 +46,7 @@ class BLIP2Cir(nn.Module):
             for p in self.visual_encoder.parameters():
                 p.requires_grad = False
 
-        for p in self.vision_proj.parameters():
+        for p in self.modelvision_proj.parameters():
             p.requires_grad = False
 
         self.temp = 0.07
@@ -62,40 +55,26 @@ class BLIP2Cir(nn.Module):
         ref_img, tar_feat, caption, _ = batch
 
         device = ref_img.device
-
+        """
         if self.train_vit:
-            ref_img_embs = self.visual_encoder(ref_img)
+            sample = {"image": ref_img, "text_input": None}
+            ref_img_embs = self.model.extract_features(sample,mode="image")
         else:
             with torch.no_grad():
-                ref_img_embs = self.visual_encoder(ref_img)
-
+                sample = {"image": ref_img, "text_input": None}
+                ref_img_embs = self.model.extract_features(sample,mode="image")
+        """
         # Encode the target image
         tar_feat = tar_feat.to(device)
         tar_img_feat = F.normalize(tar_feat, dim=-1)
 
-        # Encode the reference image
-        ref_img_atts = torch.ones(ref_img_embs.size()[:-1], dtype=torch.long).to(device)
 
-        text = self.tokenizer(
-            caption,
-            padding="max_length",
-            truncation=True,
-            max_length=35,
-            return_tensors="pt",
-        ).to(device)
+        text = self.txt_processors['train'](caption).to(device)
 
-        # Shift encoder
-        encoder_input_ids = text.input_ids.clone()
-        encoder_input_ids[:, 0] = self.tokenizer.enc_token_id
-        query_embs = self.text_encoder(
-            encoder_input_ids,
-            attention_mask=text.attention_mask,
-            encoder_hidden_states=ref_img_embs,
-            encoder_attention_mask=ref_img_atts,
-            return_dict=True,
-        )
-        query_feat = query_embs.last_hidden_state[:, 0, :]
-        query_feat = F.normalize(self.text_proj(query_feat), dim=-1)
+        sample = {"image": ref_img, "text_input": text}
+        query_feat = self.model.extract_features(sample)
+        query_feat  = query_feat.multimodal_embeds
+        query_feat = F.normalize(query_feat, dim=-1)
 
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim

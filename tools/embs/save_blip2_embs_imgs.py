@@ -78,8 +78,6 @@ def main(args):
     config = get_blip2_config(args.model_type)
     model = blip2_embs(
         model_type=config["model_type"],
-        image_size=config["image_size"],
-        queue_size=config["queue_size"],
         negative_all_rank=config["negative_all_rank"],
     )
 
