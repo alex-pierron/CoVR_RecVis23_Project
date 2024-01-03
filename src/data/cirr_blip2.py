@@ -12,7 +12,7 @@ from src.data.utils import id2int, pre_caption
 Image.MAX_IMAGE_PIXELS = None  # Disable DecompressionBombWarning
 
 
-class CIRRDataModule(LightningDataModule):
+class CIRRDataModule_blip2(LightningDataModule):
     def __init__(
         self,
         batch_size: int,
@@ -21,7 +21,7 @@ class CIRRDataModule(LightningDataModule):
         annotation: dict = {"train": "", "val": ""},
         img_dirs: dict = {"train": "", "val": ""},
         emb_dirs: dict = {"train": "", "val": ""},
-        image_size: int = 384,
+        image_size: int = 224,
         **kwargs,  # type: ignore
     ) -> None:
         super().__init__()
@@ -34,14 +34,14 @@ class CIRRDataModule(LightningDataModule):
         self.transform_train = transform_train(image_size)
         self.transform_test = transform_test(image_size)
 
-        self.data_train = CIRRDataset(
+        self.data_train = CIRRDataset_blip2(
             transform=self.transform_train,
             annotation=annotation["train"],
             img_dir=img_dirs["train"],
             emb_dir=emb_dirs["train"],
             split="train",
         )
-        self.data_val = CIRRDataset(
+        self.data_val = CIRRDataset_blip2(
             transform=self.transform_test,
             annotation=annotation["val"],
             img_dir=img_dirs["val"],
@@ -75,7 +75,7 @@ class CIRRDataModule(LightningDataModule):
         )
 
 
-class CIRRTestDataModule(LightningDataModule):
+class CIRRTestDataModule_blip2(LightningDataModule):
     def __init__(
         self,
         batch_size: int,
@@ -84,7 +84,7 @@ class CIRRTestDataModule(LightningDataModule):
         emb_dirs: str,
         num_workers: int = 4,
         pin_memory: bool = True,
-        image_size: int = 384,
+        image_size: int = 224,
         **kwargs,  # type: ignore
     ) -> None:
         super().__init__()
@@ -96,7 +96,7 @@ class CIRRTestDataModule(LightningDataModule):
 
         self.transform_test = transform_test(image_size)
 
-        self.data_test = CIRRDataset(
+        self.data_test = CIRRDataset_blip2(
             transform=self.transform_test,
             annotation=annotation,
             img_dir=img_dirs,
@@ -115,7 +115,7 @@ class CIRRTestDataModule(LightningDataModule):
         )
 
 
-class CIRRDataset(Dataset):
+class CIRRDataset_blip2(Dataset):
     def __init__(
         self,
         transform,

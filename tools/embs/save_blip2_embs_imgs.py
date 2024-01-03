@@ -12,7 +12,6 @@ project_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
 sys.path.append(project_root)
 
 from src.data.embs_blip2 import ImageDataset
-from torchvision import transforms
 from src.model.blip2_embs import blip2_embs
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -52,13 +51,8 @@ def get_blip2_config(model="base"):
         config["vit"] = "large"
         config["batch_size_train"] = 16
         config["batch_size_test"] = 32
-        config["vit_grad_ckpt"] = True
-        config["vit_ckpt_layer"] = 12
-        config["init_lr"] = 5e-6
         config["image_size"] = 384
         config["queue_size"] = 57600
-        config["alpha"] = 0.4
-        config["k_test"] = 256
         config["negative_all_rank"] = True
 
     return config
@@ -111,10 +105,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("--save_dir", type=Path)
     parser.add_argument("--img_ext", type=str, default="png")
-    parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument(
-        "--model_type", type=str, default="large", choices=["base", "large"]
+        "--model_type", type=str, default="pretrain", choices=["pretrain", "pretrain_vitL","coco"]
     )
     args = parser.parse_args()
 
