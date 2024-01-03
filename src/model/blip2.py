@@ -11,8 +11,6 @@ from hydra.utils import get_original_cwd
 from timm.models.hub import download_cached_file
 from torch import nn
 
-from transformers import Blip2Config,Blip2Model,Blip2VisionConfig,Blip2QFormerConfig,AutoTokenizer
-
 from src.model.med import BertConfig, BertLMHeadModel, BertModel
 from src.model.vit import VisionTransformer, interpolate_pos_embed
 
