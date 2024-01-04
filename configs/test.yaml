@@ -17,7 +17,7 @@ defaults:
   - test: all
   - machine: server
   - trainer: gpu
-  - model: blip-large
+  - model: blip2
   - model/ckpt: blip-l-coco
   - model/loss: hn_nce
   - trainer/logger: none

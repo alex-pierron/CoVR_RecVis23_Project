@@ -1,8 +1,8 @@
 # @package _global_
 
 defaults:
-  - override /data: cirr.yaml
-  - override /test: cirr.yaml
+  - override /data: cirr_blip2.yaml
+  - override /test: cirr_blip2.yaml
   # - override /model/ckpt: webvid-covr.yaml
 
 model:
