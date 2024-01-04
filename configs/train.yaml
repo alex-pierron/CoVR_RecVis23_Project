@@ -14,7 +14,7 @@ logger_level: INFO
 # Composing nested config with default
 defaults:
   - _self_
-  - data: cirr
+  - data: cirr_blip2
   - machine: server
   - trainer: gpu
   - test: all
