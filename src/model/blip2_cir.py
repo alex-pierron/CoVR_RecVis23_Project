@@ -16,8 +16,6 @@ class BLIP2Cir(nn.Module):
     def __init__(
         self,
         loss: Any,
-        med_config="configs/med_config.json",
-        image_size=224,
         name="blip2_feature_extractor",
         model_type = "pretrained",
         embed_dim=256,
@@ -46,7 +44,7 @@ class BLIP2Cir(nn.Module):
             for p in self.visual_encoder.parameters():
                 p.requires_grad = False
 
-        for p in self.modelvision_proj.parameters():
+        for p in self.model.vision_proj.parameters():
             p.requires_grad = False
 
         self.temp = 0.07
@@ -87,9 +85,5 @@ class BLIP2Cir(nn.Module):
         return self.loss(query_feat, tar_img_feat, self.temp)
 
 
-def blip2_cir(model, ckpt_path, **kwargs):
-    if ckpt_path:
-        model, msg = load_checkpoint(model, ckpt_path)
-        print_dist("missing keys:")
-        print_dist(msg.missing_keys)
+def blip2_cir(model, **kwargs):
     return model

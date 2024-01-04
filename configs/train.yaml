@@ -19,7 +19,7 @@ defaults:
   - trainer: gpu
   - test: all
   - trainer/logger: csv
-  - model: blip-large
+  - model: blip2
   - model/optimizer: adamw
   - model/scheduler: cosine
   - model/loss: hn_nce
