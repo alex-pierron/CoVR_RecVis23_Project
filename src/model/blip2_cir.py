@@ -65,16 +65,10 @@ class BLIP2Cir(nn.Module):
         # Encode the target image
         tar_feat = tar_feat.to(device)
         tar_img_feat = F.normalize(tar_feat, dim=-1)
-
-        print(caption)
         #text = self.txt_processors['train'](caption).to(device)
-        print(tar_feat.shape)
-        print(tar_img_feat.shape)
         sample = {"image": ref_img, "text_input": caption}
         query_feat = self.model.extract_features(sample)
         query_feat  = query_feat.multimodal_embeds
-        #query_feat = F.normalize(query_feat, dim=-1)
-        print(query_feat.shape)
         query_feat = F.normalize(query_feat[:, 0, :], dim=-1)
 
         if fabric.world_size > 1:
@@ -84,8 +78,6 @@ class BLIP2Cir(nn.Module):
 
             tar_img_feat = fabric.all_gather(tar_img_feat, sync_grads=True)
             tar_img_feat = einops.rearrange(tar_img_feat, "d b e -> (d b) e")
-        print(query_feat.shape)
-        print(tar_img_feat.shape)
         return self.loss(query_feat, tar_img_feat, self.temp)
 
 
