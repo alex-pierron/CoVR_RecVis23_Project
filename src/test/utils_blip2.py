@@ -84,8 +84,6 @@ def evaluate_blip2(model, data_loader, fabric):
                 if i < len(sim_q2t) and j < len(sim_q2t[i]):
                     if ref_img_ids[i] == tar_img_ids[j]:
                         sim_q2t[i][j] = -10
-                else:
-                    print(f"Index out of bounds: i={i}, j={j}")
 
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
