@@ -68,7 +68,8 @@ class BLIP2Cir(nn.Module):
 
         print(caption)
         #text = self.txt_processors['train'](caption).to(device)
-
+        print(tar_feat.shape)
+        print(tar_img_feat.shape)
         sample = {"image": ref_img, "text_input": caption}
         query_feat = self.model.extract_features(sample)
         query_feat  = query_feat.multimodal_embeds
