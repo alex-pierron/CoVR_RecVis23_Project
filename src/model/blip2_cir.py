@@ -35,7 +35,7 @@ class BLIP2Cir(nn.Module):
         self.visual_encoder = self.model.visual_encoder
         self.embed_dim = embed_dim
 
-        self.temp = nn.Parameter(0.07 * torch.ones([]))
+        self.temp = torch.nn.Parameter(0.07 * torch.ones([]))
 
 
         self.train_vit = train_vit
