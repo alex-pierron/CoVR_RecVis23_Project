@@ -18,10 +18,10 @@ defaults:
   - machine: server
   - trainer: gpu
   - model: blip2
-  - model/ckpt: blip-l-coco
+  #- model/ckpt: blip-l-coco
   - model/loss: hn_nce
   - trainer/logger: none
 
-  - experiment: null
+  - experiment: cirr_blip2
 
 paths: ${machine.paths}
