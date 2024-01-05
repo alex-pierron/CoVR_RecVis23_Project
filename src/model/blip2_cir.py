@@ -18,7 +18,7 @@ class BLIP2Cir(nn.Module):
         loss: Any,
         name="blip2_feature_extractor",
         model_type = "pretrain",
-        embed_dim=256,
+        embed_dim=768,
         is_eval = False,
         train_vit = False
     ):
@@ -47,7 +47,7 @@ class BLIP2Cir(nn.Module):
         for p in self.model.vision_proj.parameters():
             p.requires_grad = False
 
-        self.temp = 0.07
+        #self.temp = 0.07
 
     def forward(self, batch, fabric):
         ref_img, tar_feat, caption, _ = batch
