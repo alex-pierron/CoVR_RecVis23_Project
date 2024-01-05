@@ -3,7 +3,7 @@ _target_: src.model.blip2_cir.blip2_cir
 
 
 model:
-  _target_: src.model.blip_cir.BLIP2Cir
+  _target_: src.model.blip2_cir.BLIP2Cir
   name: "blip2_feature_extractor"
   model_type:  "pretrained"
   embed_dim: 256
