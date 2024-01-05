@@ -1,5 +1,5 @@
 dataname: cirr_blip2
-_target_: src.data.cirr.CIRRDataModule_blip2
+_target_: src.data.cirr_blip2.CIRRDataModule_blip2
 
 # Paths
 dataset_dir: ${paths.datasets_dir}/CIRR
