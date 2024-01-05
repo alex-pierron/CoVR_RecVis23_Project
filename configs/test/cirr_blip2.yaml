@@ -1,4 +1,4 @@
-cirr:
+cirr_blip2:
   dataname: cirr_blip2
   _target_: src.data.cirr_blip2.CIRRTestDataModule_blip2
 
