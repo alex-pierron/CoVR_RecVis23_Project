@@ -73,7 +73,9 @@ class BLIP2Cir(nn.Module):
         sample = {"image": ref_img, "text_input": caption}
         query_feat = self.model.extract_features(sample)
         query_feat  = query_feat.multimodal_embeds
-        query_feat = F.normalize(query_feat, dim=-1)
+        #query_feat = F.normalize(query_feat, dim=-1)
+        print(query_feat.shape)
+        query_feat = F.normalize(query_feat[:, 0, :], dim=-1)
 
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim
