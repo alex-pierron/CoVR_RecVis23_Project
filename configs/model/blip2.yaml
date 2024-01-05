@@ -1,5 +1,5 @@
 modelname: blip2
-_target_: src.model.blip_cir.blip2_cir
+_target_: src.model.blip2_cir.blip2_cir
 
 
 model:
