@@ -1,4 +1,4 @@
-dataname: cirr
+dataname: cirr_blip2
 _target_: src.data.cirr.CIRRDataModule_blip2
 
 # Paths
