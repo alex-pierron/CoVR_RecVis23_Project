@@ -81,7 +81,8 @@ class BLIP2Cir(nn.Module):
 
             tar_img_feat = fabric.all_gather(tar_img_feat, sync_grads=True)
             tar_img_feat = einops.rearrange(tar_img_feat, "d b e -> (d b) e")
-
+        print(query_feat.shape)
+        print(tar_img_feat.shape)
         return self.loss(query_feat, tar_img_feat, self.temp)
 
 
