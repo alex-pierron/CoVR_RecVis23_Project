@@ -67,9 +67,9 @@ class BLIP2Cir(nn.Module):
         tar_img_feat = F.normalize(tar_feat, dim=-1)
 
 
-        text = self.txt_processors['train'](caption).to(device)
+        #text = self.txt_processors['train'](caption).to(device)
 
-        sample = {"image": ref_img, "text_input": text}
+        sample = {"image": ref_img, "text_input": caption}
         query_feat = self.model.extract_features(sample)
         query_feat  = query_feat.multimodal_embeds
         query_feat = F.normalize(query_feat, dim=-1)
