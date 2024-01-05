@@ -66,7 +66,7 @@ class BLIP2Cir(nn.Module):
         tar_feat = tar_feat.to(device)
         tar_img_feat = F.normalize(tar_feat, dim=-1)
 
-
+        print(caption)
         #text = self.txt_processors['train'](caption).to(device)
 
         sample = {"image": ref_img, "text_input": caption}
