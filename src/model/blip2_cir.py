@@ -17,7 +17,7 @@ class BLIP2Cir(nn.Module):
         self,
         loss: Any,
         name="blip2_feature_extractor",
-        model_type = "pretrained",
+        model_type = "pretrain",
         embed_dim=256,
         is_eval = False,
         train_vit = False
