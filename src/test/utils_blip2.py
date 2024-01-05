@@ -48,14 +48,8 @@ def evaluate_blip2(model, data_loader, fabric):
         # Encode the target image
         tar_img_feats.append(tar_feat.cpu())
 
-        pair_ids = torch.tensor(pair_ids, dtype=torch.long)
-        query_feats = torch.cat(query_feats, dim=0)
-        tar_img_feats = torch.cat(tar_img_feats, dim=0)
-        query_feats.append(query_feat.cpu())
 
-        # Encode the target image
-        tar_img_feats.append(tar_feat.cpu())
-
+    pair_ids = torch.tensor(pair_ids, dtype=torch.long)
     query_feats = torch.cat(query_feats, dim=0)
     tar_img_feats = torch.cat(tar_img_feats, dim=0)
 
