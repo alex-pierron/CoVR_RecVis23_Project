@@ -55,7 +55,7 @@ class BLIP2Cir(nn.Module):
         boite.init_Qformer(num_query_token=num_query_token,vision_width=vision_width)
 
         self.Qformer = boite.Qformer
-        self.Qformer.config.vocab_size = 30525
+        self.Qformer.config.vocab_size = 30524
         text_width = self.Qformer.config.hidden_size
         self.vision_proj = nn.Linear(vision_width, embed_dim)
         self.text_proj = nn.Linear(text_width, embed_dim)
@@ -101,6 +101,8 @@ class BLIP2Cir(nn.Module):
         # Shift encoder
         encoder_input_ids = text.input_ids.clone()
         print("c")
+        print(self.Qformer.config)
+        print(self.Qformer)
         encoder_input_ids[:, 0] = self.tokenizer.enc_token_id
         print(encoder_input_ids[:, 0])
         query_embs = self.Qformer(
