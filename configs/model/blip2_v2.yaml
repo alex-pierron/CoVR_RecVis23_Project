@@ -10,6 +10,6 @@ model:
   image_size: 384
   vit: "eva_clip_g"
   num_query_token: 32
-  drop_path_rate: 0,
+  drop_path_rate: 0
   use_grad_checkpoint: False
   precision: 1e-2
