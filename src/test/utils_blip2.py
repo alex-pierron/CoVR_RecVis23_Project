@@ -77,6 +77,7 @@ def evaluate_blip2(model, data_loader, fabric):
     if fabric.global_rank == 0:
         sim_q2t = (query_feats @ tar_img_feats.t()).cpu().numpy()
         print(query_feats.shape)
+        print(tar_img_feats.shape)
         print(ref_img_ids.shape)
         print(tar_img_ids.shape)
         print(sim_q2t.shape)
