@@ -5,7 +5,6 @@ _target_: src.model.blip2_cir_v2.blip2_cir
 model:
   _target_: src.model.blip2_cir_v2.BLIP2Cir
   embed_dim: 768
-  is_eval: False
   train_vit: False
   loss: ${model.loss}
   image_size: 384
