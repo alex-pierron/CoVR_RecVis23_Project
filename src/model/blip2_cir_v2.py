@@ -17,7 +17,7 @@ class BLIP2Cir(nn.Module):
         med_config="configs/med_config.json",
         image_size=384,
         vit="eva_clip_g",
-        num_query_token=32,
+        num_query_token=35,
         embed_dim=768,
         train_vit=False,
         drop_path_rate=0,
@@ -75,7 +75,6 @@ class BLIP2Cir(nn.Module):
         ref_img, tar_feat, caption, _ = batch
 
         device = ref_img.device
-        print("O")
         if self.train_vit:
             ref_img_embs = self.visual_encoder(ref_img)
         else:
@@ -101,6 +100,7 @@ class BLIP2Cir(nn.Module):
 
         # Shift encoder
         encoder_input_ids = text.input_ids.clone()
+        print("c")
         encoder_input_ids[:, 0] = self.tokenizer.enc_token_id
         query_embs = self.Qformer(
             encoder_input_ids,
@@ -109,7 +109,7 @@ class BLIP2Cir(nn.Module):
             encoder_attention_mask=ref_img_atts,
             return_dict=True,
         )
-        print("C")
+        print("d")
         query_feat = query_embs.last_hidden_state[:, 0, :]
         query_feat = F.normalize(self.text_proj(query_feat), dim=-1)
         print(query_feat.shape)
