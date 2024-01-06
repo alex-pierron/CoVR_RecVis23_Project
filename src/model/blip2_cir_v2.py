@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from torch import nn
 from transformers.models.bert.configuration_bert import BertConfig
 
+from src.model.med import BertModel
 
 from lavis.models import load_model
 
@@ -54,9 +55,14 @@ class BLIP2Cir(nn.Module):
 
         boite.init_Qformer(num_query_token=num_query_token,vision_width=vision_width)
 
+        med_config = BertConfig.from_json_file(med_config)
+        med_config.encoder_width = vision_width
+        Qformer_bert = BertModel(config=med_config, add_pooling_layer=False)
+
         self.Qformer = boite.Qformer
-        self.Qformer.config.vocab_size = 30525
+        self.Qformer.bert = Qformer_bert
         text_width = self.Qformer.config.hidden_size
+        
         self.vision_proj = nn.Linear(vision_width, embed_dim)
         self.text_proj = nn.Linear(text_width, embed_dim)
 
@@ -104,7 +110,7 @@ class BLIP2Cir(nn.Module):
         encoder_input_ids[:, 0] = self.tokenizer.enc_token_id
         print(encoder_input_ids[:, 0])
         query_embs = self.Qformer(
-            encoder_input_ids,
+            input_ids = encoder_input_ids,
             attention_mask=text.attention_mask,
             encoder_hidden_states=ref_img_embs,
             encoder_attention_mask=ref_img_atts,
