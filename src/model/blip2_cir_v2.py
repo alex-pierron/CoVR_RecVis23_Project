@@ -102,6 +102,7 @@ class BLIP2Cir(nn.Module):
         encoder_input_ids = text.input_ids.clone()
         print("c")
         encoder_input_ids[:, 0] = self.tokenizer.enc_token_id
+        print(encoder_input_ids[:, 0])
         query_embs = self.Qformer(
             encoder_input_ids,
             attention_mask=text.attention_mask,
