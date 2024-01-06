@@ -36,7 +36,7 @@ class BLIP2Cir(nn.Module):
         boite = load_model("blip2", "pretrain")
 
         assert vit in ["eva_clip_g", "clip_L"], "vit parameter must be eva_clip_g or clip_L"
-        if vit == "eval_clip_g":
+        if vit == "eva_clip_g":
             vision_width = 1048
         
         elif vit == "clip_L":
@@ -44,7 +44,7 @@ class BLIP2Cir(nn.Module):
         
         else:
             raise NotImplementedError
-            return visual_encoder, vision_width
+            
         
         self.visual_encoder = boite.init_vision_encoder(model_name=vit,img_size=image_size, 
                                                         drop_path_rate=0 or drop_path_rate,
