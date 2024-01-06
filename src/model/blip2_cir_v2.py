@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from torch import nn
 from transformers.models.bert.configuration_bert import BertConfig
 
-from src.model.med import BertModel
 
 from lavis.models import load_model
 
@@ -15,7 +14,7 @@ class BLIP2Cir(nn.Module):
     def __init__(
         self,
         loss: Any,
-        med_config="CoVR_RecVis23_Project/configs/med_config.json",
+        med_config="configs/med_config.json",
         image_size=384,
         vit="eva_clip_g",
         num_query_token=35,
@@ -55,14 +54,9 @@ class BLIP2Cir(nn.Module):
 
         boite.init_Qformer(num_query_token=num_query_token,vision_width=vision_width)
 
-        med_config = BertConfig.from_json_file(med_config)
-        med_config.encoder_width = vision_width
-        Qformer_bert = BertModel(config=med_config, add_pooling_layer=False)
-
         self.Qformer = boite.Qformer
-        self.Qformer.bert = Qformer_bert
+        self.Qformer.config.vocab_size = 30525
         text_width = self.Qformer.config.hidden_size
-
         self.vision_proj = nn.Linear(vision_width, embed_dim)
         self.text_proj = nn.Linear(text_width, embed_dim)
 
