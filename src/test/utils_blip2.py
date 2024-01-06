@@ -23,8 +23,6 @@ def evaluate_blip2(model, data_loader, fabric):
         pair_ids.extend(pair_id.cpu().numpy().tolist())
         captions.extend(caption)
 
-        pair_ids.extend(pair_id.cpu().numpy().tolist())
-
         device = ref_img.device
         """
         if self.train_vit:
