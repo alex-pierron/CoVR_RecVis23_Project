@@ -56,6 +56,7 @@ class BLIP2Cir(nn.Module):
 
         self.Qformer = boite.Qformer
         self.Qformer.config.vocab_size = 30524
+        self.Qformer.config.query_length = num_query_token
         text_width = self.Qformer.config.hidden_size
         self.vision_proj = nn.Linear(vision_width, embed_dim)
         self.text_proj = nn.Linear(text_width, embed_dim)
