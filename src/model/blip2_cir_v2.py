@@ -75,7 +75,7 @@ class BLIP2Cir(nn.Module):
         ref_img, tar_feat, caption, _ = batch
 
         device = ref_img.device
-
+        print("O")
         if self.train_vit:
             ref_img_embs = self.visual_encoder(ref_img)
         else:
@@ -84,11 +84,13 @@ class BLIP2Cir(nn.Module):
 
         # Encode the target image
         tar_feat = tar_feat.to(device)
+        print("a")
         tar_img_feat = F.normalize(tar_feat, dim=-1)
 
         # Encode the reference image
         ref_img_atts = torch.ones(ref_img_embs.size()[:-1], dtype=torch.long).to(device)
 
+        print("b")
         text = self.tokenizer(
             caption,
             padding="max_length",
@@ -107,9 +109,10 @@ class BLIP2Cir(nn.Module):
             encoder_attention_mask=ref_img_atts,
             return_dict=True,
         )
+        print("C")
         query_feat = query_embs.last_hidden_state[:, 0, :]
         query_feat = F.normalize(self.text_proj(query_feat), dim=-1)
-
+        print(query_feat.shape)
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim
             query_feat = fabric.all_gather(query_feat, sync_grads=True)
@@ -117,6 +120,8 @@ class BLIP2Cir(nn.Module):
 
             tar_img_feat = fabric.all_gather(tar_img_feat, sync_grads=True)
             tar_img_feat = einops.rearrange(tar_img_feat, "d b e -> (d b) e")
+
+        print(query_feat.shape,tar_img_feat.shape)
 
         return self.loss(query_feat, tar_img_feat, self.temp)
 

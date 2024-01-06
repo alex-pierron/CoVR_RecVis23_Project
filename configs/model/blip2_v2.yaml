@@ -7,7 +7,7 @@ model:
   embed_dim: 768
   train_vit: False
   loss: ${model.loss}
-  image_size: 384
+  image_size: 224
   vit: "eva_clip_g"
   num_query_token: 32
   drop_path_rate: 0

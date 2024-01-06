@@ -16,7 +16,7 @@ defaults:
   - _self_
   - data: cirr_blip2
   - machine: server
-  - trainer: cpu
+  - trainer: gpu
   - test: all
   - trainer/logger: csv
   - model: blip2_v2
