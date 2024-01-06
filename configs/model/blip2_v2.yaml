@@ -1,12 +1,17 @@
-modelname: blip2v_2
+modelname: blip2_v2
 _target_: src.model.blip2_cir_v2.blip2_cir
 
 
 model:
   _target_: src.model.blip2_cir_v2.BLIP2Cir
   name: "blip2_feature_extractor"
-  model_type: "pretrain"
   embed_dim: 768
   is_eval: False
   train_vit: False
   loss: ${model.loss}
+  image_size: 384
+  vit: "eva_clip_g"
+  num_query_token: 32
+  drop_path_rate: 0,
+  use_grad_checkpoint: False
+  precision: 1e-2
