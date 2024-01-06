@@ -71,6 +71,8 @@ def evaluate_blip2(model, data_loader, fabric):
 
         query_feats = einops.rearrange(query_feats, "d b e -> (d b) e")
         tar_img_feats = einops.rearrange(tar_img_feats, "d b e -> (d b) e")
+        print(ref_img_ids.shape)
+        print(tar_img_ids.shape)
         ref_img_ids = einops.rearrange(ref_img_ids, "d b -> (d b)")
         tar_img_ids = einops.rearrange(tar_img_ids, "d b -> (d b)")
 
