@@ -58,7 +58,8 @@ def evaluate_blip2(model, data_loader, fabric):
 
     ref_img_ids = [data_loader.dataset.pairid2ref[pair_id.item()] for pair_id in pair_ids]
     tar_img_ids = [data_loader.dataset.pairid2tar[pair_id.item()] for pair_id in pair_ids]
-
+    print(ref_img_ids[0])
+    print(tar_img_ids[0])
     ref_img_ids = torch.tensor(ref_img_ids, dtype=torch.long)
     tar_img_ids = torch.tensor(tar_img_ids, dtype=torch.long)
 
