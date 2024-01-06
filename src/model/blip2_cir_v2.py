@@ -46,10 +46,10 @@ class BLIP2Cir(nn.Module):
             raise NotImplementedError
             
         
-        self.visual_encoder = boite.init_vision_encoder(model_name=vit,img_size=image_size, 
-                                                        drop_path_rate=0 or drop_path_rate,
-                                                        use_grad_checkpoint=use_grad_checkpoint,precision=precision)
+        boite.init_vision_encoder(model_name=vit,img_size=image_size,drop_path_rate=0 or drop_path_rate,
+                                  use_grad_checkpoint=use_grad_checkpoint,precision=precision)
 
+        self.visual_encoder = boite.visual_encoder
         self.tokenizer = init_tokenizer(boite.init_tokenizer())
 
         boite.init_Qformer(num_query_token=num_query_token,vision_width=vision_width)
