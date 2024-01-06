@@ -15,7 +15,7 @@ class BLIP2Cir(nn.Module):
     def __init__(
         self,
         loss: Any,
-        med_config="configs/med_config.json",
+        med_config="CoVR_RecVis23_Project/configs/med_config.json",
         image_size=384,
         vit="eva_clip_g",
         num_query_token=35,
@@ -62,7 +62,7 @@ class BLIP2Cir(nn.Module):
         self.Qformer = boite.Qformer
         self.Qformer.bert = Qformer_bert
         text_width = self.Qformer.config.hidden_size
-        
+
         self.vision_proj = nn.Linear(vision_width, embed_dim)
         self.text_proj = nn.Linear(text_width, embed_dim)
 
