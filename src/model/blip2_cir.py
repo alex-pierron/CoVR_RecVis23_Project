@@ -44,9 +44,6 @@ class BLIP2Cir(nn.Module):
             for p in self.visual_encoder.parameters():
                 p.requires_grad = False
 
-        for p in self.model.vision_proj.parameters():
-            p.requires_grad = False
-
         #self.temp = 0.07
 
     def forward(self, batch, fabric):
