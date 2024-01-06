@@ -56,8 +56,6 @@ def evaluate_blip2(model, data_loader, fabric):
 
     ref_img_ids = [data_loader.dataset.pairid2ref[pair_id.item()] for pair_id in pair_ids]
     tar_img_ids = [data_loader.dataset.pairid2tar[pair_id.item()] for pair_id in pair_ids]
-    print(ref_img_ids[0])
-    print(tar_img_ids[0])
     ref_img_ids = torch.tensor(ref_img_ids, dtype=torch.long)
     tar_img_ids = torch.tensor(tar_img_ids, dtype=torch.long)
 
@@ -70,18 +68,11 @@ def evaluate_blip2(model, data_loader, fabric):
 
         query_feats = einops.rearrange(query_feats, "d b e -> (d b) e")
         tar_img_feats = einops.rearrange(tar_img_feats, "d b e -> (d b) e")
-        print(ref_img_ids.shape)
-        print(tar_img_ids.shape)
         ref_img_ids = einops.rearrange(ref_img_ids, "d b -> (d b)")
         tar_img_ids = einops.rearrange(tar_img_ids, "d b -> (d b)")
 
     if fabric.global_rank == 0:
         sim_q2t = (query_feats @ tar_img_feats.t()).cpu().numpy()
-        print(query_feats.shape)
-        print(tar_img_feats.shape)
-        print(ref_img_ids.shape)
-        print(tar_img_ids.shape)
-        print(sim_q2t.shape)
         # Add zeros where ref_img_id == tar_img_id
         for i in range(len(ref_img_ids)):
             for j in range(len(tar_img_ids)):
