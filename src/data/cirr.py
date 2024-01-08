@@ -5,6 +5,8 @@ import torch
 from lightning import LightningDataModule
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Sampler
+import random
 
 from src.data.transforms import transform_test, transform_train
 from src.data.utils import id2int, pre_caption
@@ -53,16 +55,96 @@ class CIRRDataModule(LightningDataModule):
         # things to do on 1 GPU/TPU (not on every GPU/TPU in DDP)
         # download data, pre-process, split, save to disk, etc...
         pass
+    def train_dataloader(self,mode = "contrastive"):
+        if mode == "normal":
+            return DataLoader(
+                dataset=self.data_train,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                pin_memory=self.pin_memory,
+                shuffle=True,
+                drop_last=True,
+            )
+        
+        if mode == "contrastive":
+            class Contrastive_Sampler(Sampler):
 
-    def train_dataloader(self):
-        return DataLoader(
+                def __init__(self,dataset:CIRRDataset,batch_size:int):
+                    self.dataset = dataset
+                    self.batch_size = batch_size
+                    self.indices = list(range(len(self.dataset)))
+                    
+                    self.ref2idx = {ann["reference"]:idx for idx,ann in enumerate(self.dataset.annotation)}
+                    self.members = []
+
+                    for ann in dataset.annotation:
+                        repeat = False                    
+                        # check presence
+                        for members in self.members:
+                            if self.ref2idx[ann["reference"]] in members:
+                                repeat = True
+                                break
+                        if not repeat: 
+                            self.members.append([self.ref2idx.get(ref,None) for ref in ann["img_set"]["members"]])
+                    
+                def __iter__(self):
+
+                    for j in range(len(self.members)):
+                        random.shuffle(self.members[j])
+                    random.shuffle(self.members)
+                    batch = list(zip(*self.members))
+                    batch = [mini_batch[i:i+self.batch_size] for mini_batch in batch for i in range(0,len(mini_batch),self.batch_size)]
+                    batch = [[item for item in mini_batch if item is not None] for mini_batch in batch]
+
+                    return iter(batch)
+                
+                def __len__(self):
+                    return (len(self.members))*6//self.batch_size
+                
+            return DataLoader(
             dataset=self.data_train,
-            batch_size=self.batch_size,
+            batch_sampler=Contrastive_Sampler(self.data_train,self.batch_size),
             num_workers=self.num_workers,
-            pin_memory=self.pin_memory,
-            shuffle=True,
-            drop_last=True,
-        )
+            pin_memory=self.pin_memory
+            )
+        
+        if mode == "conjunctive":
+
+            class Conjunctive_Sampler(Sampler):
+
+                def __init__(self,dataset:CIRRDataset,batch_size:int):
+                    self.dataset = dataset
+                    self.batch_size = batch_size + batch_size%6
+                    self.indices = list(range(len(self.dataset)))
+                    self.ref2idx = {ann["reference"]:idx for idx,ann in enumerate(self.dataset.annotation)}
+                    self.members = []
+
+                    for ann in dataset.annotation:
+                        repeat = False                    
+                        # check presence
+                        for members in self.members:
+                            if self.ref2idx[ann["reference"]] in members:
+                                repeat = True
+                                break
+                        if not repeat:
+                            self.members.append([self.ref2idx.get(ref,None) for ref in ann["img_set"]["members"]])
+                    
+                def __iter__(self):
+                    random.shuffle(self.members)
+                    batch = [member for members in self.members for member in members]
+                    batch = [batch[i:i+self.batch_size] for i in range(0,len(batch),self.batch_size)]
+                    batch = [[item for item in mini_batch if item is not None] for mini_batch in batch]
+                    return iter(batch)
+                
+                def __len__(self):
+                    return (len(self.members))*6//self.batch_size
+                
+            return DataLoader(
+                dataset=self.data_train,
+                batch_sampler=Conjunctive_Sampler(self.data_train,self.batch_size),
+                num_workers=self.num_workers,
+                pin_memory=self.pin_memory
+                )
 
     def val_dataloader(self):
         return DataLoader(
@@ -162,12 +244,9 @@ class CIRRDataset(Dataset):
         else:
             self.pairid2tar = None
 
-        if split == "train":
-            img_pths = self.img_dir.glob("*/*.png")
-            emb_pths = self.emb_dir.glob("*/*.pth")
-        else:
-            img_pths = self.img_dir.glob("*.png")
-            emb_pths = self.emb_dir.glob("*.pth")
+        img_pths = self.img_dir.glob("*.png")
+        emb_pths = self.emb_dir.glob("*.pth")
+
         self.id2imgpth = {img_pth.stem: img_pth for img_pth in img_pths}
         self.id2embpth = {emb_pth.stem: emb_pth for emb_pth in emb_pths}
 
@@ -211,3 +290,5 @@ class CIRRDataset(Dataset):
             caption,
             ann["pairid"],
         )
+    
+
