@@ -1,171 +1,229 @@
-
-import warnings
-
-warnings.filterwarnings("ignore")
-
+"""
+ Copyright (c) 2023, salesforce.com, inc.
+ All rights reserved.
+ SPDX-License-Identifier: BSD-3-Clause
+ For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+"""
+import contextlib
+import logging
 import os
-from urllib.parse import urlparse
+import time
+import datetime
 
 import torch
-from hydra.utils import get_original_cwd
-from timm.models.hub import download_cached_file
-from torch import nn
+import torch.nn as nn
+import torch.distributed as dist
+import torch.nn.functional as F
 
-from src.model.med import BertConfig, BertLMHeadModel, BertModel
-from src.model.vit import VisionTransformer, interpolate_pos_embed
-
-
-class BLIP_2_Base(nn.Module):
-    def __init__(
-        self,
-        med_config="configs/med_config.json",
-        image_size=224,
-        vit="base",
-        vit_grad_ckpt=False,
-        vit_ckpt_layer=0,
-    ):
-        """
-        Args:
-            med_config (str): path for the mixture of encoder-decoder model's configuration file
-            image_size (int): input image size
-            vit (str): model size of vision transformer
-        """
-        super().__init__()
-
-        self.visual_encoder, vision_width = (
-            vit, image_size, vit_grad_ckpt, vit_ckpt_layer
-        )
-        #self.tokenizer = init_tokenizer_2()
-        med_config = BertConfig.from_json_file(med_config)
-        med_config.encoder_width = vision_width
-        self.text_encoder = BertModel(config=med_config, add_pooling_layer=False)
-
-    def forward(self, image, caption, mode):
-        assert mode in [
-            "image",
-            "text",
-            "multimodal",
-        ], "mode parameter must be image, text, or multimodal"
-        text = self.tokenizer(caption, return_tensors="pt").to(image.device)
-
-        if mode == "image":
-            # return image features
-            image_embeds = self.visual_encoder(image)
-            return image_embeds
-
-        elif mode == "text":
-            # return text features
-            text_output = self.text_encoder(
-                text.input_ids,
-                attention_mask=text.attention_mask,
-                return_dict=True,
-                mode="text",
-            )
-            return text_output.last_hidden_state
-
-        elif mode == "multimodal":
-            # return multimodel features
-            image_embeds = self.visual_encoder(image)
-            image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(
-                image.device
-            )
-
-            text.input_ids[:, 0] = self.tokenizer.enc_token_id
-            output = self.Qformer.bert(
-                text.input_ids,
-                querry_embeds = query_tokens,
-                attention_mask=text.attention_mask,
-                encoder_hidden_states= image_embeds,
-                encoder_attention_mask= image_atts,
-                return_dict=True,
-            )
-            return output.last_hidden_state
-        
+import lavis.common.dist_utils as dist_utils
+from lavis.common.dist_utils import download_cached_file
+from lavis.common.utils import is_url
+from lavis.common.logger import MetricLogger
+from lavis.models.base_model import BaseModel
+from lavis.models.blip2_models.Qformer import BertConfig, BertLMHeadModel
+from lavis.models.eva_vit import create_eva_vit_g
+from lavis.models.clip_vit import create_clip_vit_L
+from transformers import BertTokenizer
 
 
+class Blip2Base(BaseModel):
+    @classmethod
+    def init_tokenizer(cls):
+        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        tokenizer.add_special_tokens({"bos_token": "[DEC]"})
+        return tokenizer
 
-def create_vit(
-    vit, image_size, use_grad_checkpointing=False, ckpt_layer=0, drop_path_rate=0
-):
-    assert vit in ["base", "large"], "vit parameter must be base or large"
-    if vit == "base":
-        vision_width = 768
-        visual_encoder = VisionTransformer(
-            img_size=image_size,
-            patch_size=16,
-            embed_dim=vision_width,
-            depth=12,
-            num_heads=12,
-            use_grad_checkpointing=use_grad_checkpointing,
-            ckpt_layer=ckpt_layer,
-            drop_path_rate=0 or drop_path_rate,
-        )
-    elif vit == "large":
-        vision_width = 1024
-        visual_encoder = VisionTransformer(
-            img_size=image_size,
-            patch_size=16,
-            embed_dim=vision_width,
-            depth=24,
-            num_heads=16,
-            use_grad_checkpointing=use_grad_checkpointing,
-            ckpt_layer=ckpt_layer,
-            drop_path_rate=0.1 or drop_path_rate,
-        )
-    else:
-        raise NotImplementedError
-    return visual_encoder, vision_width
+    def maybe_autocast(self, dtype=torch.float16):
+        # if on cpu, don't use autocast
+        # if on gpu, use autocast with dtype if provided, otherwise use torch.float16
+        enable_autocast = self.device != torch.device("cpu")
 
-"""
-def init_tokenizer_2():
-    tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip2-opt-2.7b")
-    tokenizer.add_special_tokens({"bos_token": "[DEC]"})
-    tokenizer.add_special_tokens({"additional_special_tokens": ["[ENC]"]})
-    tokenizer.enc_token_id = tokenizer.additional_special_tokens_ids[0]
-    return tokenizer
-"""
-
-def is_url(url_or_filename):
-    parsed = urlparse(url_or_filename)
-    return parsed.scheme in ("http", "https")
-
-
-def load_checkpoint(model, url_or_filename):
-    if is_url(url_or_filename):
-        cached_file = download_cached_file(
-            url_or_filename, check_hash=False, progress=True
-        )
-        checkpoint = torch.load(cached_file, map_location="cpu")
-    elif os.path.isfile(url_or_filename):
-        checkpoint = torch.load(url_or_filename, map_location="cpu")
-    else:
-        raise RuntimeError(f"checkpoint {url_or_filename} is invalid")
-
-    state_dict = checkpoint["model"]
-    state_dict = remove_module(state_dict)
-
-    state_dict["visual_encoder.pos_embed"] = interpolate_pos_embed(
-        state_dict["visual_encoder.pos_embed"], model.visual_encoder
-    )
-    if "visual_encoder_m.pos_embed" in model.state_dict().keys():
-        state_dict["visual_encoder_m.pos_embed"] = interpolate_pos_embed(
-            state_dict["visual_encoder_m.pos_embed"], model.visual_encoder_m
-        )
-    for key in model.state_dict().keys():
-        if key in state_dict.keys():
-            if state_dict[key].shape != model.state_dict()[key].shape:
-                del state_dict[key]
-
-    msg = model.load_state_dict(state_dict, strict=False)
-    print("load checkpoint from %s" % url_or_filename)
-    return model, msg
-
-
-def remove_module(state_dict):
-    new_state_dict = {}
-    for key in state_dict.keys():
-        if key.startswith("module."):
-            new_state_dict[key[7:]] = state_dict[key]
+        if enable_autocast:
+            return torch.cuda.amp.autocast(dtype=dtype)
         else:
-            new_state_dict[key] = state_dict[key]
-    return new_state_dict
+            return contextlib.nullcontext()
+
+    @classmethod
+    def init_Qformer(cls, num_query_token, vision_width, cross_attention_freq=2):
+        encoder_config = BertConfig.from_pretrained("bert-base-uncased")
+        encoder_config.encoder_width = vision_width
+        # insert cross-attention layer every other block
+        encoder_config.add_cross_attention = True
+        encoder_config.cross_attention_freq = cross_attention_freq
+        encoder_config.query_length = num_query_token
+        Qformer = BertLMHeadModel.from_pretrained(
+            "bert-base-uncased", config=encoder_config
+        )
+        query_tokens = nn.Parameter(
+            torch.zeros(1, num_query_token, encoder_config.hidden_size)
+        )
+        query_tokens.data.normal_(mean=0.0, std=encoder_config.initializer_range)
+        return Qformer, query_tokens
+
+    @classmethod
+    def init_vision_encoder(
+        cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision
+    ):
+        assert model_name in [
+            "eva_clip_g",
+            "clip_L",
+        ], "vit model must be eva_clip_g or clip_L"
+        if model_name == "eva_clip_g":
+            visual_encoder = create_eva_vit_g(
+                img_size, drop_path_rate, use_grad_checkpoint, precision
+            )
+        elif model_name == "clip_L":
+            visual_encoder = create_clip_vit_L(img_size, use_grad_checkpoint, precision)
+        ln_vision = LayerNorm(visual_encoder.num_features)
+        return visual_encoder, ln_vision
+
+    def load_from_pretrained(self, url_or_filename):
+        if is_url(url_or_filename):
+            cached_file = download_cached_file(
+                url_or_filename, check_hash=False, progress=True
+            )
+            checkpoint = torch.load(cached_file, map_location="cpu")
+        elif os.path.isfile(url_or_filename):
+            checkpoint = torch.load(url_or_filename, map_location="cpu")
+        else:
+            raise RuntimeError("checkpoint url or path is invalid")
+
+        state_dict = checkpoint["model"]
+
+        msg = self.load_state_dict(state_dict, strict=False)
+
+        # logging.info("Missing keys {}".format(msg.missing_keys))
+        logging.info("load checkpoint from %s" % url_or_filename)
+
+        return msg
+
+
+def disabled_train(self, mode=True):
+    """Overwrite model.train with this function to make sure train/eval mode
+    does not change anymore."""
+    return self
+
+
+class LayerNorm(nn.LayerNorm):
+    """Subclass torch's LayerNorm to handle fp16."""
+
+    def forward(self, x: torch.Tensor):
+        orig_type = x.dtype
+        ret = super().forward(x.type(torch.float32))
+        return ret.type(orig_type)
+
+
+def compute_sim_matrix(model, data_loader, **kwargs):
+    k_test = kwargs.pop("k_test")
+
+    metric_logger = MetricLogger(delimiter="  ")
+    header = "Evaluation:"
+
+    logging.info("Computing features for evaluation...")
+    start_time = time.time()
+
+    texts = data_loader.dataset.text
+    num_text = len(texts)
+    text_bs = 256
+    text_ids = []
+    text_embeds = []
+    text_atts = []
+    for i in range(0, num_text, text_bs):
+        text = texts[i : min(num_text, i + text_bs)]
+        text_input = model.tokenizer(
+            text,
+            padding="max_length",
+            truncation=True,
+            max_length=35,
+            return_tensors="pt",
+        ).to(model.device)
+        text_feat = model.forward_text(text_input)
+        text_embed = F.normalize(model.text_proj(text_feat))
+        text_embeds.append(text_embed)
+        text_ids.append(text_input.input_ids)
+        text_atts.append(text_input.attention_mask)
+
+    text_embeds = torch.cat(text_embeds, dim=0)
+    text_ids = torch.cat(text_ids, dim=0)
+    text_atts = torch.cat(text_atts, dim=0)
+
+    vit_feats = []
+    image_embeds = []
+    for samples in data_loader:
+        image = samples["image"]
+
+        image = image.to(model.device)
+        image_feat, vit_feat = model.forward_image(image)
+        image_embed = model.vision_proj(image_feat)
+        image_embed = F.normalize(image_embed, dim=-1)
+
+        vit_feats.append(vit_feat.cpu())
+        image_embeds.append(image_embed)
+
+    vit_feats = torch.cat(vit_feats, dim=0)
+    image_embeds = torch.cat(image_embeds, dim=0)
+
+    sims_matrix = []
+    for image_embed in image_embeds:
+        sim_q2t = image_embed @ text_embeds.t()
+        sim_i2t, _ = sim_q2t.max(0)
+        sims_matrix.append(sim_i2t)
+    sims_matrix = torch.stack(sims_matrix, dim=0)
+
+    score_matrix_i2t = torch.full(
+        (len(data_loader.dataset.image), len(texts)), -100.0
+    ).to(model.device)
+
+    num_tasks = dist_utils.get_world_size()
+    rank = dist_utils.get_rank()
+    step = sims_matrix.size(0) // num_tasks + 1
+    start = rank * step
+    end = min(sims_matrix.size(0), start + step)
+
+    for i, sims in enumerate(
+        metric_logger.log_every(sims_matrix[start:end], 50, header)
+    ):
+        topk_sim, topk_idx = sims.topk(k=k_test, dim=0)
+        image_inputs = vit_feats[start + i].repeat(k_test, 1, 1).to(model.device)
+        score = model.compute_itm(
+            image_inputs=image_inputs,
+            text_ids=text_ids[topk_idx],
+            text_atts=text_atts[topk_idx],
+        ).float()
+        score_matrix_i2t[start + i, topk_idx] = score + topk_sim
+
+    sims_matrix = sims_matrix.t()
+    score_matrix_t2i = torch.full(
+        (len(texts), len(data_loader.dataset.image)), -100.0
+    ).to(model.device)
+
+    step = sims_matrix.size(0) // num_tasks + 1
+    start = rank * step
+    end = min(sims_matrix.size(0), start + step)
+
+    for i, sims in enumerate(
+        metric_logger.log_every(sims_matrix[start:end], 50, header)
+    ):
+        topk_sim, topk_idx = sims.topk(k=k_test, dim=0)
+        image_inputs = vit_feats[topk_idx.cpu()].to(model.device)
+        score = model.compute_itm(
+            image_inputs=image_inputs,
+            text_ids=text_ids[start + i].repeat(k_test, 1),
+            text_atts=text_atts[start + i].repeat(k_test, 1),
+        ).float()
+        score_matrix_t2i[start + i, topk_idx] = score + topk_sim
+
+    if dist_utils.is_dist_avail_and_initialized():
+        dist.barrier()
+        torch.distributed.all_reduce(
+            score_matrix_i2t, op=torch.distributed.ReduceOp.SUM
+        )
+        torch.distributed.all_reduce(
+            score_matrix_t2i, op=torch.distributed.ReduceOp.SUM
+        )
+
+    total_time = time.time() - start_time
+    total_time_str = str(datetime.timedelta(seconds=int(total_time)))
+    logging.info("Evaluation time {}".format(total_time_str))
+
+    return score_matrix_i2t.cpu().numpy(), score_matrix_t2i.cpu().numpy()

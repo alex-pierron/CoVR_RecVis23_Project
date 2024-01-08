@@ -1,8 +1,6 @@
 import torch
 from torch import nn
 
-from src.model.blip2 import load_checkpoint
-
 from lavis.models import load_model_and_preprocess
 class BLIP2_Embs(nn.Module):
     def __init__(
