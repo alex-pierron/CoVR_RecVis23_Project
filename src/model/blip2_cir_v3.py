@@ -27,10 +27,6 @@ from lavis.models.blip2_models.blip2 import (
     disabled_train,
 )
 
-
-@registry.register_model("blip2")
-@registry.register_model("blip2_feature_extractor")
-
 class BLIP2Cir(Blip2Base):
     def __init__(
             self,
