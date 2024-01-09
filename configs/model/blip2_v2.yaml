@@ -7,7 +7,7 @@ model:
   embed_dim: 256
   freeze_vit: True
   loss: ${model.loss}
-  image_size: 384
+  img_size: 384
   vit_model: "eva_clip_g"
   max_txt_len: 35
   drop_path_rate: 0
