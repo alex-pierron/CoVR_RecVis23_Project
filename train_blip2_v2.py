@@ -7,7 +7,7 @@ import lightning as L
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 
-from src.test.utils_blip2_v2 import evaluate_blip2
+from src.test.utils_blip2_v3 import evaluate_blip2
 from src.tools.files import json_dump
 from src.tools.utils import calculate_model_params
 

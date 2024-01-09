@@ -87,21 +87,13 @@ class BLIP2Cir(Blip2Base):
 
         query_tokens = self.query_tokens.expand(ref_img_embeds.shape[0], -1, -1)
 
-        query_output = self.Qformer.bert(
-            query_embeds=query_tokens,
-            encoder_hidden_states=ref_img_embeds,
-            encoder_attention_mask=ref_img_atts,
-            use_cache=True,
-            return_dict=True,
-        )
 
         # Encode the target image
         tar_feat = tar_feat.to(device)
         tar_img_feat = F.normalize(tar_feat, dim=-1)
         
-        query_feats = F.normalize(
-            self.vision_proj(query_output.last_hidden_state), dim=-1
-        )
+        tar_img_feat = F.normalize(
+            self.vision_proj(tar_img_feat), dim=-1)
 
         text_tokens = self.tokenizer(
             caption,
@@ -110,16 +102,6 @@ class BLIP2Cir(Blip2Base):
             max_length=self.max_txt_len,
             return_tensors="pt",
         ).to(device)
-
-        text_output = self.Qformer.bert(
-            text_tokens.input_ids,
-            attention_mask=text_tokens.attention_mask,
-            return_dict=True,
-        )
-
-        text_feat = F.normalize(
-            self.text_proj(text_output.last_hidden_state[:, 0, :]), dim=-1
-        )
 
         output = self.Qformer.bert(
             text_tokens.input_ids,
@@ -130,7 +112,9 @@ class BLIP2Cir(Blip2Base):
             return_dict=True,
         )
         
-        multimodal_embeds = output.last_hidden_state[:, : query_tokens.size(1), :]
+        query_feat = output.last_hidden_state[:, : query_tokens.size(1), :]
+        
+        query_feat =   F.normalize(self.text_proj(query_feat), dim=-1) 
 
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim

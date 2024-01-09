@@ -1,15 +1,16 @@
 modelname: blip2_v2
-_target_: src.model.blip2_cir_v2.blip2_cir
+_target_: src.model.blip2_cir_v3.blip2_cir
 
 
 model:
-  _target_: src.model.blip2_cir_v2.BLIP2Cir
-  embed_dim: 768
-  train_vit: False
+  _target_: src.model.blip2_cir_v3.BLIP2Cir
+  embed_dim: 256
+  freeze_vit: True
   loss: ${model.loss}
-  image_size: 224
-  vit: "eva_clip_g"
-  num_query_token: 35
+  image_size: 384
+  vit_model: "eva_clip_g"
+  max_txt_len: 35
   drop_path_rate: 0
+  cross_attention_freq: 2
   use_grad_checkpoint: False
-  precision: 1e-2
+  vit_precision: "fp16"
