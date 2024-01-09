@@ -5,7 +5,7 @@ _target_: src.model.blip2_cir_v3.blip2_cir
 model:
   _target_: src.model.blip2_cir_v3.BLIP2Cir
   embed_dim: 256
-  freeze_vit: True
+  train_vit: False
   loss: ${model.loss}
   img_size: 384
   vit_model: "eva_clip_g"
@@ -14,4 +14,3 @@ model:
   cross_attention_freq: 2
   use_grad_checkpoint: False
   vit_precision: "fp16"
-  train_vit: False

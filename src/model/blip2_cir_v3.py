@@ -36,7 +36,7 @@ class BLIP2Cir(Blip2Base):
             drop_path_rate=0,
             use_grad_checkpoint=False,
             vit_precision="fp16",
-            freeze_vit=True,
+            train_vit=False,
             num_query_token=32,
             cross_attention_freq=2,
             embed_dim=256,
@@ -50,7 +50,7 @@ class BLIP2Cir(Blip2Base):
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
             vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision
         )
-        if freeze_vit:
+        if not train_vit:
             for name, param in self.visual_encoder.named_parameters():
                 param.requires_grad = False
             self.visual_encoder = self.visual_encoder.eval()
