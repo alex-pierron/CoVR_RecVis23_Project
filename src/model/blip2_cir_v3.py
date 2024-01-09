@@ -48,7 +48,8 @@ class BLIP2Cir(Blip2Base):
         ):
         super().__init__()
 
-        self.tokenizer = self.init_tokenizer()
+        self.tokenizer = self.init_tokenizer()  
+        self.tokenizer = init_tokenizer_(self.tokenizer)
 
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
             vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision
@@ -132,7 +133,7 @@ def blip2_cir(model, **kwargs):
     return model
 
 
-def init_tokenizer(tokenizer):
+def init_tokenizer_(tokenizer):
     tokenizer.add_special_tokens({"bos_token": "[DEC]"})
     tokenizer.add_special_tokens({"additional_special_tokens": ["[ENC]"]})
     tokenizer.enc_token_id = tokenizer.additional_special_tokens_ids[0]
