@@ -78,19 +78,24 @@ class BLIP2Cir(Blip2Base):
         ref_img, tar_feat, caption, _ = batch
         device = ref_img.device
 
+        print("testing")
         ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
 
+        
         ref_img_atts = torch.ones(ref_img_embeds.size()[:-1]).to(device)
 
         query_tokens = self.query_tokens.expand(ref_img_embeds.shape[0], -1, -1)
 
 
         # Encode the target image
+        print("visual_encoder")
         tar_feat = tar_feat.to(device)
         tar_img_feat = F.normalize(tar_feat, dim=-1)
         
         tar_img_feat = F.normalize(
             self.vision_proj(tar_img_feat), dim=-1)
+
+        print("vision_proj")
 
         text_tokens = self.tokenizer(
             caption,
@@ -99,6 +104,8 @@ class BLIP2Cir(Blip2Base):
             max_length=self.max_txt_len,
             return_tensors="pt",
         ).to(device)
+
+        print("text_tokens")
 
         output = self.Qformer.bert(
             text_tokens.input_ids,
@@ -109,10 +116,12 @@ class BLIP2Cir(Blip2Base):
             return_dict=True,
         )
         
+        print("output")
+
         query_feat = output.last_hidden_state[:, : query_tokens.size(1), :]
         
         query_feat = F.normalize(self.text_proj(query_feat), dim=-1) 
-
+        print("text_proj")
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim
             query_feat = fabric.all_gather(query_feat, sync_grads=True)
