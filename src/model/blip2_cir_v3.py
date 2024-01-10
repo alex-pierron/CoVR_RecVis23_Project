@@ -80,7 +80,7 @@ class BLIP2Cir(Blip2Base):
 
         ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
 
-        ref_img_atts = torch.ones(ref_img_embeds.size()[:-1], dtype=torch.long).to(device)
+        ref_img_atts = torch.ones(ref_img_embeds.size()[:-1]).to(device)
 
         query_tokens = self.query_tokens.expand(ref_img_embeds.shape[0], -1, -1)
 
@@ -111,7 +111,7 @@ class BLIP2Cir(Blip2Base):
         
         query_feat = output.last_hidden_state[:, : query_tokens.size(1), :]
         
-        query_feat =   F.normalize(self.text_proj(query_feat), dim=-1) 
+        query_feat = F.normalize(self.text_proj(query_feat), dim=-1) 
 
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim
