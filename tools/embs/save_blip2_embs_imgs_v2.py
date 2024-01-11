@@ -13,7 +13,7 @@ sys.path.append(project_root)
 
 from lavis.models import load_model_and_preprocess
 
-from src.data.embs import ImageDataset
+from src.data.embs_blip2 import ImageDataset
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
