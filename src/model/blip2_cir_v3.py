@@ -95,8 +95,8 @@ class BLIP2Cir(Blip2Base):
 
         # Encode the target image
         print("visual_encoder")
-        tar_img_feat = tar_feat.to(device)
-        tar_img_feat = self.max_pool(tar_img_feat)
+        #tar_img_feat = tar_feat.to(device)
+        #tar_img_feat = self.max_pool(tar_img_feat)
         
         print("vision_proj")
 
