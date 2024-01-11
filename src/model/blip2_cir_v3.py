@@ -76,19 +76,14 @@ class BLIP2Cir(Blip2Base):
 
         self.max_txt_len = max_txt_len
 
-        self.max_pool = torch.nn.MaxPool1d(3)
-
     def forward(self, batch, fabric):
         ref_img, tar_feat, caption, _ = batch
         device = ref_img.device
 
         print("testing")
         if self.train_vit:
-            print("working")
             print(self.visual_encoder)
-            print('still working')
             print(self.ln_vision)
-            print("working again")
             ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
         else:
             with torch.no_grad():
@@ -102,7 +97,7 @@ class BLIP2Cir(Blip2Base):
         # Encode the target image
         print("visual_encoder")
         tar_img_feat = tar_feat.to(device)
-        tar_img_feat = self.max_pool(tar_img_feat)
+        tar_img_feat = torch.max(tar_img_feat, dim=1)
         
         print("vision_proj")
 
@@ -131,7 +126,7 @@ class BLIP2Cir(Blip2Base):
         query_feat = output.last_hidden_state[:, : query_tokens.size(1), :]
         
         query_feat = F.normalize(self.text_proj(query_feat), dim=-1) 
-        query_feat = self.max_pool(query_feat)
+        query_feat = torch.max(query_feat, dim=1)
 
         print("text_proj")
         if fabric.world_size > 1:
