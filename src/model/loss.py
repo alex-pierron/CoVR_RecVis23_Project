@@ -57,7 +57,7 @@ class HardNegativeNCE(nn.Module):
         batch_size = video_embds.size(0)
         # computation of the similarity matrix
         print(video_embds.shape)
-        print(text_embds.T)
+        print(text_embds.shape)
         sim_matrix = video_embds @ text_embds.T  # (batch_size, batch_size)
         # scale the similarity matrix with the temperature
         sim_matrix = sim_matrix / temp
