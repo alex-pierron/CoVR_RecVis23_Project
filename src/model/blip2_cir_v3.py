@@ -146,15 +146,15 @@ class BLIP2Cir(Blip2Base):
         print(tar_img_feat.shape)
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim
-            query_feat = fabric.all_gather(query_feat_max, sync_grads=True)
-            #query_feat = einops.rearrange(query_feat, "d b e -> (d b) e")
+            query_feat_max = fabric.all_gather(query_feat_max, sync_grads=True)
+            query_feat = einops.rearrange(query_feat_max, "d b e -> (d b) e")
 
             tar_img_feat = fabric.all_gather(tar_img_feat, sync_grads=True)
             #tar_img_feat = einops.rearrange(tar_img_feat, "d b e -> (d b) e")
 
-        print(query_feat.shape)
+        print(query_feat_max.shape)
         print(tar_img_feat.shape)
-        return self.loss(query_feat, tar_img_feat, self.temp)
+        return self.loss(query_feat_max, tar_img_feat, self.temp)
 
 
 def blip2_cir(model, **kwargs):
