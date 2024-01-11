@@ -57,6 +57,7 @@ class BLIP2Cir(Blip2Base):
             self.visual_encoder = self.visual_encoder.eval()
             self.visual_encoder.train = disabled_train
             logging.info("freeze vision encoder")
+            
         self.Qformer, self.query_tokens = self.init_Qformer(
             num_query_token, self.visual_encoder.num_features, cross_attention_freq
         )
@@ -83,6 +84,8 @@ class BLIP2Cir(Blip2Base):
 
         print("testing")
         if self.train_vit:
+            print(self.visual_encoder)
+            print(self.ln_vision)
             ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
         else:
             with torch.no_grad():
@@ -95,8 +98,8 @@ class BLIP2Cir(Blip2Base):
 
         # Encode the target image
         print("visual_encoder")
-        #tar_img_feat = tar_feat.to(device)
-        #tar_img_feat = self.max_pool(tar_img_feat)
+        tar_img_feat = tar_feat.to(device)
+        tar_img_feat = self.max_pool(tar_img_feat)
         
         print("vision_proj")
 
