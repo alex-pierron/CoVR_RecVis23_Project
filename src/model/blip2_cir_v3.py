@@ -50,7 +50,8 @@ class BLIP2Cir(Blip2Base):
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
             vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision
         )
-        if not train_vit:
+        self.train_vit = train_vit
+        if not self.train_vit:
             for name, param in self.visual_encoder.named_parameters():
                 param.requires_grad = False
             self.visual_encoder = self.visual_encoder.eval()
@@ -74,14 +75,19 @@ class BLIP2Cir(Blip2Base):
 
         self.max_txt_len = max_txt_len
 
+        self.max_pool = torch.nn.MaxPool1d(3)
+
     def forward(self, batch, fabric):
         ref_img, tar_feat, caption, _ = batch
         device = ref_img.device
 
         print("testing")
-        ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
-
-        
+        if self.train_vit:
+            ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
+        else:
+            with torch.no_grad():
+                ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
+                
         ref_img_atts = torch.ones(ref_img_embeds.size()[:-1]).to(device)
 
         query_tokens = self.query_tokens.expand(ref_img_embeds.shape[0], -1, -1)
@@ -89,14 +95,12 @@ class BLIP2Cir(Blip2Base):
 
         # Encode the target image
         print("visual_encoder")
-        tar_feat = tar_feat.to(device)
-        tar_img_feat = F.normalize(tar_feat, dim=-1)
+        tar_img_feat = tar_feat.to(device)
+        tar_img_feat = self.max_pool(tar_img_feat)
         
-        tar_img_feat = F.normalize(
-            self.vision_proj(tar_img_feat), dim=-1)
-
         print("vision_proj")
 
+        # Image-text Matching
         text_tokens = self.tokenizer(
             caption,
             padding="max_length",
@@ -121,6 +125,8 @@ class BLIP2Cir(Blip2Base):
         query_feat = output.last_hidden_state[:, : query_tokens.size(1), :]
         
         query_feat = F.normalize(self.text_proj(query_feat), dim=-1) 
+        query_feat = self.max_pool(query_feat)
+
         print("text_proj")
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim
