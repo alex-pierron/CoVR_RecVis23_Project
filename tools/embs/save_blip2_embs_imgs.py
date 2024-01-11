@@ -86,11 +86,12 @@ def main(args):
 
     for imgs, video_ids in tqdm(loader):
         imgs = imgs.to(device)
-        sample = {"image": imgs, "text_input": None}
-        img_embs = model.model.extract_features(sample,mode="image")
-        img_feats = F.normalize(img_embs.image_embeds[:, 0, :], dim=-1).cpu()
+        img_embs = model.model.extract_features({"image": imgs}, mode="image")
+        img_feats = img_embs.image_embeds_proj.cpu()
 
         for img_feat, video_id in zip(img_feats, video_ids):
+            img_feat = F.normalize(img_feat, dim=-1)
+            torch.save(img_feat, args.save_dir / f"{video_id}.pth")
             torch.save(img_feat, args.save_dir / f"{video_id}.pth")
 
 
@@ -112,14 +113,14 @@ if __name__ == "__main__":
 
     subdirectories = [subdir for subdir in args.image_dir.iterdir() if subdir.is_dir()]
     if len(subdirectories) == 0:
-        args.save_dir = args.image_dir.parent / f"blip-embs-{args.model_type}"
+        args.save_dir = args.image_dir.parent / f"blip-embs256-{args.model_type}"
         args.save_dir.mkdir(exist_ok=True)
         main(args)
     else:
         for subdir in subdirectories:
             args.image_dir = subdir
             args.save_dir = (
-                subdir.parent.parent / f"blip-embs-{args.model_type}" / subdir.name
+                subdir.parent.parent / f"blip-embs256-{args.model_type}" / subdir.name
             )
             args.save_dir.mkdir(exist_ok=True, parents=True)
             main(args)
