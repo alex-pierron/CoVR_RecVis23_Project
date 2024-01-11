@@ -23,7 +23,6 @@ def main(args):
     dataset = ImageDataset(
         image_dir=args.image_dir,
         save_dir=args.save_dir,
-        todo_ids=args.todo_ids,
     )
 
     print("Creating model")
