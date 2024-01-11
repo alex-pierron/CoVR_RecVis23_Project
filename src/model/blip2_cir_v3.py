@@ -113,10 +113,19 @@ class BLIP2Cir(Blip2Base):
 
         print("text_tokens")
 
+        # Try the following if yours does't work. If both work please evaluate the difference between the two and add it to the report.
+        # query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(
+        #    self.device
+        #)
+        #My on attention_mask : text_tokens.attention_mask
+        # attention_mask = torch.cat([query_atts, text_tokens.attention_mask], dim=1)
+        
+        query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(self.device)
+        
         output = self.Qformer.bert(
             text_tokens.input_ids,
             query_embeds=query_tokens,
-            attention_mask=text_tokens.attention_mask,
+            attention_mask=torch.cat([query_atts, text_tokens.attention_mask], dim=1),
             encoder_hidden_states=ref_img_embeds,
             encoder_attention_mask=ref_img_atts,
             return_dict=True,
