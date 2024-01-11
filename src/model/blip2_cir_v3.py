@@ -83,9 +83,12 @@ class BLIP2Cir(Blip2Base):
         device = ref_img.device
 
         print("testing")
-        """if self.train_vit:
+        if self.train_vit:
+            print("working")
             print(self.visual_encoder)
+            print('still working')
             print(self.ln_vision)
+            print("working again")
             ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
         else:
             with torch.no_grad():
@@ -94,7 +97,7 @@ class BLIP2Cir(Blip2Base):
         ref_img_atts = torch.ones(ref_img_embeds.size()[:-1]).to(device)
 
         query_tokens = self.query_tokens.expand(ref_img_embeds.shape[0], -1, -1)
-        """
+        
 
         # Encode the target image
         print("visual_encoder")
