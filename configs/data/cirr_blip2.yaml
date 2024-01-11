@@ -16,7 +16,7 @@ img_dirs:
   val: ${data.dataset_dir}/images/dev
 
 emb_dirs:
-  train: ${data.dataset_dir}/blip-embs-pretrain/train
-  val: ${data.dataset_dir}/blip-embs-pretrain/dev
+  train: ${data.dataset_dir}/blip-embs256-pretrain/train
+  val: ${data.dataset_dir}/blip-embs256-pretrain/dev
 
 image_size: 224
