@@ -86,7 +86,6 @@ def main(cfg: DictConfig):
 
 def train(model, train_loader, optimizer, fabric, epoch, cfg):
     model.train()
-    print(model.training)
     print(optimizer.param_groups[0]["lr"])
     for batch_idx, batch in enumerate(train_loader):
         optimizer.zero_grad()
