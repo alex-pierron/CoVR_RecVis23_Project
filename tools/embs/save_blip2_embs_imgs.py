@@ -28,6 +28,7 @@ def get_blip2_config(model="base"):
         config["vit_grad_ckpt"] = True
         config["vit_ckpt_layer"] = 4
         config["init_lr"] = 1e-5
+        config["negative_all_rank"] = False
         
     elif model == "pretrain_vitL":
         config[
