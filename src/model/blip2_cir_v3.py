@@ -100,6 +100,7 @@ class BLIP2Cir(Blip2Base):
         # Encode the target image
         print("visual_encoder")
         tar_img_feat = tar_feat.to(device)
+        print(tar_img_feat.shape)
         tar_img_feat_max, indice_tar_feat_max = torch.max(tar_img_feat, dim=1)
         
         print("vision_proj")
