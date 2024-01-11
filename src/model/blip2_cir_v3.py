@@ -81,11 +81,8 @@ class BLIP2Cir(Blip2Base):
     def forward(self, batch, fabric):
         ref_img, tar_feat, caption, _ = batch
         device = ref_img.device
-
-        print("testing")
+        
         if self.train_vit:
-            print(self.visual_encoder)
-            print(self.ln_vision)
             ref_img = ref_img.to(torch.float32)
             ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
         else:
@@ -98,12 +95,9 @@ class BLIP2Cir(Blip2Base):
         
 
         # Encode the target image
-        print("visual_encoder")
         tar_img_feat = tar_feat.to(device)
-        print(tar_img_feat.shape)
-        tar_img_feat_max, indice_tar_feat_max = torch.max(tar_img_feat, dim=1)
+        tar_img_feat_max, _ = torch.max(tar_img_feat, dim=1)
         
-        print("vision_proj")
 
         # Image-text Matching
         text_tokens = self.tokenizer(
@@ -113,8 +107,6 @@ class BLIP2Cir(Blip2Base):
             max_length=self.max_txt_len,
             return_tensors="pt",
         ).to(device)
-
-        print("text_tokens")
 
         # Try the following if yours does't work. If both work please evaluate the difference between the two and add it to the report.
         # query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(
@@ -133,17 +125,12 @@ class BLIP2Cir(Blip2Base):
             encoder_attention_mask=ref_img_atts,
             return_dict=True,
         )
-        
-        print("output")
 
         query_feat = output.last_hidden_state[:, : query_tokens.size(1), :]
         
         query_feat = F.normalize(self.text_proj(query_feat), dim=-1) 
-        query_feat_max, indice_max = torch.max(query_feat, dim=1)
+        query_feat_max, _ = torch.max(query_feat, dim=1)
 
-        print("text_proj")
-        print(query_feat_max.shape)
-        print(tar_img_feat.shape)
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim
             query_feat_max = fabric.all_gather(query_feat_max, sync_grads=True)
@@ -152,9 +139,6 @@ class BLIP2Cir(Blip2Base):
 
             tar_img_feat_max = fabric.all_gather(tar_img_feat, sync_grads=True)
             #tar_img_feat = einops.rearrange(tar_img_feat, "d b e -> (d b) e")
-
-        print(query_feat_max.shape)
-        print(tar_img_feat.shape)
         return self.loss(query_feat_max, tar_img_feat_max, self.temp)
 
 
