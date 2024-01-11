@@ -72,6 +72,16 @@ if __name__ == "__main__":
     parser.add_argument("--image_size", type=int, default=224, choices=[224, 364])
     args = parser.parse_args()
 
-    args.save_dir.mkdir(exist_ok=True)
-
-    main(args)
+    subdirectories = [subdir for subdir in args.image_dir.iterdir() if subdir.is_dir()]
+    if len(subdirectories) == 0:
+        args.save_dir = args.image_dir.parent / f"blip-embs-{args.model_type}"
+        args.save_dir.mkdir(exist_ok=True)
+        main(args)
+    else:
+        for subdir in subdirectories:
+            args.image_dir = subdir
+            args.save_dir = (
+                subdir.parent.parent / f"blip-embs-{args.model_type}" / subdir.name
+            )
+            args.save_dir.mkdir(exist_ok=True, parents=True)
+            main(args)
