@@ -76,6 +76,8 @@ class BLIP2Cir(Blip2Base):
 
         self.max_txt_len = max_txt_len
 
+        self.loss = loss
+
     def forward(self, batch, fabric):
         ref_img, tar_feat, caption, _ = batch
         device = ref_img.device
@@ -121,7 +123,7 @@ class BLIP2Cir(Blip2Base):
         # attention_mask = torch.cat([query_atts, text_tokens.attention_mask], dim=1)
         
         query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(self.device)
-        
+
         output = self.Qformer.bert(
             text_tokens.input_ids,
             query_embeds=query_tokens,
