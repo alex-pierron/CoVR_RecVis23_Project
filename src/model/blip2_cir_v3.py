@@ -141,6 +141,8 @@ class BLIP2Cir(Blip2Base):
         query_feat_max, indice_max = torch.max(query_feat, dim=1)
 
         print("text_proj")
+        print(query_feat_max.shape)
+        print(tar_img_feat_max.shape)
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim
             query_feat = fabric.all_gather(query_feat_max, sync_grads=True)
@@ -149,7 +151,8 @@ class BLIP2Cir(Blip2Base):
             tar_img_feat = fabric.all_gather(tar_img_feat_max, sync_grads=True)
             tar_img_feat = einops.rearrange(tar_img_feat, "d b e -> (d b) e")
 
-
+        print(query_feat.shape)
+        print(tar_img_feat.shape)
         return self.loss(query_feat, tar_img_feat, self.temp)
 
 
