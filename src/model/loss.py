@@ -54,7 +54,6 @@ class HardNegativeNCE(nn.Module):
             video_embds: (batch_size, video_embd_dim)
             text_embds: (batch_size, text_embd_dim)
         """
-        print(video_embds)
         batch_size = video_embds.size(0)
         # computation of the similarity matrix
         sim_matrix = video_embds @ text_embds.T  # (batch_size, batch_size)
