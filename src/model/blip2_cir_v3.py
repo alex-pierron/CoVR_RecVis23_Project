@@ -101,7 +101,7 @@ class BLIP2Cir(Blip2Base):
         print("visual_encoder")
         tar_img_feat = tar_feat.to(device)
         print(tar_img_feat.shape)
-        #tar_img_feat_max, indice_tar_feat_max = torch.max(tar_img_feat, dim=1)
+        tar_img_feat_max, indice_tar_feat_max = torch.max(tar_img_feat, dim=1)
         
         print("vision_proj")
 
@@ -150,12 +150,12 @@ class BLIP2Cir(Blip2Base):
             #print(query_feat_max.shape)
             #query_feat = einops.rearrange(query_feat_max, "d b e -> (d b) e")
 
-            tar_img_feat = fabric.all_gather(tar_img_feat, sync_grads=True)
+            tar_img_feat_max = fabric.all_gather(tar_img_feat, sync_grads=True)
             #tar_img_feat = einops.rearrange(tar_img_feat, "d b e -> (d b) e")
 
         print(query_feat_max.shape)
         print(tar_img_feat.shape)
-        return self.loss(query_feat_max, tar_img_feat, self.temp)
+        return self.loss(query_feat_max, tar_img_feat_max, self.temp)
 
 
 def blip2_cir(model, **kwargs):

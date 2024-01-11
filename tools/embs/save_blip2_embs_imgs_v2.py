@@ -48,7 +48,7 @@ def main(args):
         imgs = imgs.to(device)
         img_embs = model.extract_features({"image": imgs}, mode="image")
         img_feats = img_embs.image_embeds_proj.cpu()
-
+    
         for img_feat, video_id in zip(img_feats, video_ids):
             img_feat = F.normalize(img_feat, dim=-1)
             torch.save(img_feat, args.save_dir / f"{video_id}.pth")
