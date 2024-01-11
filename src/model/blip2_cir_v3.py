@@ -35,7 +35,7 @@ class BLIP2Cir(Blip2Base):
             img_size=224,
             drop_path_rate=0,
             use_grad_checkpoint=False,
-            vit_precision="fp16",
+            vit_precision="fp32",
             train_vit=False,
             num_query_token=32,
             cross_attention_freq=2,
@@ -84,7 +84,7 @@ class BLIP2Cir(Blip2Base):
         if self.train_vit:
             print(self.visual_encoder)
             print(self.ln_vision)
-            ref_img = ref_img.to(torch.float16)
+            ref_img = ref_img.to(torch.float32)
             ref_img_embeds = self.ln_vision(self.visual_encoder(ref_img))
         else:
             with torch.no_grad():
