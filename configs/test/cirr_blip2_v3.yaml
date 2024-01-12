@@ -3,7 +3,7 @@ cirr_blip2_v3:
   _target_: src.data.cirr_blip2_v3.CIRRTestDataModule_blip2
 
   test:
-    _target_: src.test.cirr_blip2.TestCirr_blip2
+    _target_: src.test.cirr_blip2_v3.TestCirr_blip2
 
   batch_size: ${machine.batch_size}
   num_workers: ${machine.num_workers}
