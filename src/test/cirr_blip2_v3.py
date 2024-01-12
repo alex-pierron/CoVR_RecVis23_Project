@@ -67,7 +67,7 @@ class TestCirr_blip2:
             #My on attention_mask : text_tokens.attention_mask
             # attention_mask = torch.cat([query_atts, text_tokens.attention_mask], dim=1)
             
-            query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(self.device)
+            query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(device)
 
             output = model.Qformer.bert(
                 text_tokens.input_ids,
