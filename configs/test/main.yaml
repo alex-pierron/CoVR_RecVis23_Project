@@ -2,3 +2,4 @@ defaults:
   - cirr.yaml
   - webvid-covr.yaml
   - cirr_blip2.yaml
+  - cirr_blip2_v3.yaml

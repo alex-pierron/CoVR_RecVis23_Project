@@ -25,6 +25,8 @@ def evaluate_blip2(model, data_loader, fabric):
 
         device = ref_img.device
 
+        ref_img = ref_img.to(torch.float32)
+
         ref_img_embeds = model.ln_vision(model.visual_encoder(ref_img))
 
         ref_img_atts = torch.ones(ref_img_embeds.size()[:-1], dtype=torch.long).to(device)
@@ -36,29 +38,53 @@ def evaluate_blip2(model, data_loader, fabric):
         tar_feat = tar_feat.to(device)
         tar_img_feat = F.normalize(tar_feat, dim=-1)
         
-        tar_img_feat = F.normalize(
-            model.vision_proj(tar_img_feat), dim=-1)
+        if model.pooling == "max":
+            tar_img_feat_pool, _ = torch.max(tar_img_feat, dim=1)
 
+        elif model.pooling == "mean":
+            tar_img_feat_pool, _ = torch.mean(tar_img_feat, dim=1)
+
+
+        # Image-text Matching
         text_tokens = model.tokenizer(
             caption,
             padding="max_length",
             truncation=True,
-            max_length=model.max_txt_len,
+            max_length= model.max_txt_len,
             return_tensors="pt",
         ).to(device)
+
+        # Try the following if yours does't work. If both work please evaluate the difference between the two and add it to the report.
+        # query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(
+        #    self.device
+        #)
+        #My on attention_mask : text_tokens.attention_mask
+        # attention_mask = torch.cat([query_atts, text_tokens.attention_mask], dim=1)
+        
+        query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(self.device)
 
         output = model.Qformer.bert(
             text_tokens.input_ids,
             query_embeds=query_tokens,
-            attention_mask=text_tokens.attention_mask,
+            attention_mask=torch.cat([query_atts, text_tokens.attention_mask], dim=1),
             encoder_hidden_states=ref_img_embeds,
             encoder_attention_mask=ref_img_atts,
             return_dict=True,
         )
-        
+
         query_feat = output.last_hidden_state[:, : query_tokens.size(1), :]
         
-        query_feat =   F.normalize(model.text_proj(query_feat), dim=-1) 
+        query_feat = F.normalize(model.text_proj(query_feat), dim=-1) 
+        if model.pooling == "max":
+            query_feat_pool, _ = torch.max(query_feat, dim=1)
+
+        elif model.pooling == "mean":
+            query_feat_pool, _ = torch.mean(query_feat, dim=1)
+
+        query_feats.append(query_feat_pool.cpu())
+
+        # Encode the target image
+        tar_img_feats.append(tar_img_feat_pool.cpu())
 
     query_feats = torch.cat(query_feats, dim=0)
     tar_img_feats = torch.cat(tar_img_feats, dim=0)

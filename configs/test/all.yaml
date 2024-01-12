@@ -5,3 +5,4 @@ defaults:
   - fashioniq-shirt.yaml
   - fashioniq-toptee.yaml
   - cirr_blip2.yaml
+  - cirr_blip2_v3.yaml

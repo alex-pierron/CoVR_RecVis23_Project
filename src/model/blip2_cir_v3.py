@@ -41,6 +41,7 @@ class BLIP2Cir(Blip2Base):
             cross_attention_freq=2,
             embed_dim=256,
             max_txt_len=35,
+            pooling = "max",
         ):
         super().__init__()
 
@@ -76,6 +77,7 @@ class BLIP2Cir(Blip2Base):
 
         self.max_txt_len = max_txt_len
 
+        self.pooling = pooling
         self.loss = loss
 
     def forward(self, batch, fabric):
@@ -96,8 +98,12 @@ class BLIP2Cir(Blip2Base):
 
         # Encode the target image
         tar_img_feat = tar_feat.to(device)
-        tar_img_feat_max, _ = torch.max(tar_img_feat, dim=1)
-        
+
+        if self.pooling == "max":
+            tar_img_feat_pool, _ = torch.max(tar_img_feat, dim=1)
+
+        elif self.pooling == "mean":
+            tar_img_feat_pool, _ = torch.mean(tar_img_feat, dim=1)
 
         # Image-text Matching
         text_tokens = self.tokenizer(
@@ -129,17 +135,23 @@ class BLIP2Cir(Blip2Base):
         query_feat = output.last_hidden_state[:, : query_tokens.size(1), :]
         
         query_feat = F.normalize(self.text_proj(query_feat), dim=-1) 
-        query_feat_max, _ = torch.max(query_feat, dim=1)
+        
+        if self.pooling == "max":
+            query_feat_pool, _ = torch.max(query_feat, dim=1)
+
+        elif self.pooling == "mean":
+            query_feat_pool, _ = torch.mean(query_feat, dim=1)
+
 
         if fabric.world_size > 1:
             # d: devices, b: batch size, e: embedding dim
-            query_feat_max = fabric.all_gather(query_feat_max, sync_grads=True)
+            query_feat_pool = fabric.all_gather(query_feat_pool, sync_grads=True)
             #print(query_feat_max.shape)
             #query_feat = einops.rearrange(query_feat_max, "d b e -> (d b) e")
 
-            tar_img_feat_max = fabric.all_gather(tar_img_feat, sync_grads=True)
+            tar_img_feat_pool = fabric.all_gather(tar_img_feat_pool, sync_grads=True)
             #tar_img_feat = einops.rearrange(tar_img_feat, "d b e -> (d b) e")
-        return self.loss(query_feat_max, tar_img_feat_max, self.temp)
+        return self.loss(query_feat_pool, tar_img_feat_pool, self.temp)
 
 
 def blip2_cir(model, **kwargs):
