@@ -14,4 +14,4 @@ model:
   cross_attention_freq: 2
   use_grad_checkpoint: False
   vit_precision: "fp32"
-  pooling: "mean"
+  pooling: "max"
