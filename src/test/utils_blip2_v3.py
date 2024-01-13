@@ -42,7 +42,7 @@ def evaluate_blip2(model, data_loader, fabric):
             tar_img_feat_pool, _ = torch.max(tar_img_feat, dim=1)
 
         elif model.pooling == "mean":
-            tar_img_feat_pool, _ = torch.mean(tar_img_feat, dim=1)
+            tar_img_feat_pool = torch.mean(tar_img_feat, dim=1)
 
 
         # Image-text Matching
@@ -79,7 +79,7 @@ def evaluate_blip2(model, data_loader, fabric):
             query_feat_pool, _ = torch.max(query_feat, dim=1)
 
         elif model.pooling == "mean":
-            query_feat_pool, _ = torch.mean(query_feat, dim=1)
+            query_feat_pool = torch.mean(query_feat, dim=1)
 
         query_feats.append(query_feat_pool.cpu())
 

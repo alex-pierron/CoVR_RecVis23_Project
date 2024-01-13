@@ -103,7 +103,7 @@ class BLIP2Cir(Blip2Base):
             tar_img_feat_pool, _ = torch.max(tar_img_feat, dim=1)
 
         elif self.pooling == "mean":
-            tar_img_feat_pool, _ = torch.mean(tar_img_feat, dim=1)
+            tar_img_feat_pool = torch.mean(tar_img_feat, dim=1)
 
         # Image-text Matching
         text_tokens = self.tokenizer(
@@ -140,7 +140,7 @@ class BLIP2Cir(Blip2Base):
             query_feat_pool, _ = torch.max(query_feat, dim=1)
 
         elif self.pooling == "mean":
-            query_feat_pool, _ = torch.mean(query_feat, dim=1)
+            query_feat_pool = torch.mean(query_feat, dim=1)
 
 
         if fabric.world_size > 1:
