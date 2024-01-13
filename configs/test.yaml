@@ -18,7 +18,7 @@ defaults:
   - machine: server
   - trainer: gpu
   - model: blip2_v2
-  - model/ckpt: blip2_eva_clip_g
+  #- model/ckpt: blip2_eva_clip_g
   - model/loss: hn_nce
   - trainer/logger: none
 

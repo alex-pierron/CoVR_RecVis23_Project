@@ -23,7 +23,7 @@ defaults:
   - model/optimizer: adamw
   - model/scheduler: cosine
   - model/loss: hn_nce
-  - model/ckpt: blip2_eva_clip_g
+  #- model/ckpt: blip2_eva_clip_g
 
   - experiment: cirr_blip2_v3
 
