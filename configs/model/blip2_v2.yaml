@@ -8,7 +8,7 @@ model:
   train_vit: False
   loss: ${model.loss}
   img_size: 224
-  vit_model: "eva_clip_g"
+  vit_model: "clip_L"
   max_txt_len: 35
   drop_path_rate: 0
   cross_attention_freq: 2
