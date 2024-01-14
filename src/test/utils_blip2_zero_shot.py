@@ -24,44 +24,38 @@ def evaluate_blip2(model, data_loader, fabric):
         captions.extend(caption)
 
         device = ref_img.device
-
-        ref_img_embs = model.visual_encoder(ref_img)
-        ref_img_atts = torch.ones(ref_img_embs.size()[:-1], dtype=torch.long).to(device)
-
-        text = model.tokenizer(
-            caption,
-            padding="longest",
-            truncation=True,
-            max_length=64,
-            return_tensors="pt",
-        ).to(device)
-
-        # Shift encoder
-        encoder_input_ids = text.input_ids.clone()
-        encoder_input_ids[:, 0] = model.tokenizer.enc_token_id
-        query_embs = model.text_encoder(
-            encoder_input_ids,
-            attention_mask=text.attention_mask,
-            encoder_hidden_states=ref_img_embs,
-            encoder_attention_mask=ref_img_atts,
-            return_dict=True,
-        )
-        query_feat = query_embs.last_hidden_state[:, 0, :]
-        query_feat = F.normalize(model.text_proj(query_feat), dim=-1)
+        """
+        if self.train_vit:
+            sample = {"image": ref_img, "text_input": None}
+            ref_img_embs = self.model.extract_features(sample,mode="image")
+        else:
+            with torch.no_grad():
+                sample = {"image": ref_img, "text_input": None}
+                ref_img_embs = self.model.extract_features(sample,mode="image")
+        """
+        # Encode the target image
+        tar_feat = tar_feat.to(device)
+        tar_img_feat = F.normalize(tar_feat, dim=-1)
+        #text = self.txt_processors['train'](caption).to(device)
+        sample = {"image": ref_img, "text_input": caption}
+        query_feat = model.model.extract_features(sample)
+        query_feat  = query_feat.multimodal_embeds
+        query_feat = F.normalize(query_feat[:, 0, :], dim=-1)
         query_feats.append(query_feat.cpu())
 
         # Encode the target image
         tar_img_feats.append(tar_feat.cpu())
 
+
+    pair_ids = torch.tensor(pair_ids, dtype=torch.long)
     query_feats = torch.cat(query_feats, dim=0)
     tar_img_feats = torch.cat(tar_img_feats, dim=0)
 
     query_feats = F.normalize(query_feats, dim=-1)
     tar_img_feats = F.normalize(tar_img_feats, dim=-1)
 
-    ref_img_ids = [data_loader.dataset.pairid2ref[pair_id] for pair_id in pair_ids]
-    tar_img_ids = [data_loader.dataset.pairid2tar[pair_id] for pair_id in pair_ids]
-
+    ref_img_ids = [data_loader.dataset.pairid2ref[pair_id.item()] for pair_id in pair_ids]
+    tar_img_ids = [data_loader.dataset.pairid2tar[pair_id.item()] for pair_id in pair_ids]
     ref_img_ids = torch.tensor(ref_img_ids, dtype=torch.long)
     tar_img_ids = torch.tensor(tar_img_ids, dtype=torch.long)
 
@@ -79,12 +73,12 @@ def evaluate_blip2(model, data_loader, fabric):
 
     if fabric.global_rank == 0:
         sim_q2t = (query_feats @ tar_img_feats.t()).cpu().numpy()
-
         # Add zeros where ref_img_id == tar_img_id
         for i in range(len(ref_img_ids)):
             for j in range(len(tar_img_ids)):
-                if ref_img_ids[i] == tar_img_ids[j]:
-                    sim_q2t[i][j] = -10
+                if i < len(sim_q2t) and j < len(sim_q2t[i]):
+                    if ref_img_ids[i] == tar_img_ids[j]:
+                        sim_q2t[i][j] = -10
 
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
