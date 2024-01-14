@@ -13,15 +13,15 @@ logger_level: INFO
 # Composing nested config with default
 defaults:
   - _self_
-  - data: cirr
+  - data: cirr_blip2
   - test: all
   - machine: server
   - trainer: gpu
-  - model: blip-large
-  - model/ckpt: blip-l-coco
+  - model: blip2
+  #- model/ckpt: blip2_eva_clip_g
   - model/loss: hn_nce
   - trainer/logger: none
 
-  - experiment: null
+  - experiment: cirr_blip2
 
 paths: ${machine.paths}
