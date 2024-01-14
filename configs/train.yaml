@@ -5,7 +5,7 @@ hydra:
     chdir: true
 
 # Global configurations shared between different modules
-experiment: tv-${model.model.train_vit}_loss-${model.model.loss.name}_lr-${model.optimizer.lr}
+experiment: tv-${model.model.train_vit}_loss-${model.model.loss.name}_vit${model.model.vit_model}_lr-${model.optimizer.lr}_pooling-${model.model.pooling}
 run_name: base
 
 seed: 1234
@@ -19,11 +19,11 @@ defaults:
   - trainer: gpu
   - test: all
   - trainer/logger: csv
-  - model: blip2_v2
+  - model: blip2
   - model/optimizer: adamw
   - model/scheduler: cosine
   - model/loss: hn_nce
-  #- model/ckpt: blip-l-coco
+  #- model/ckpt: blip2_eva_clip_g
 
   - experiment: cirr_blip2
 

@@ -10,6 +10,6 @@ cirr_blip2:
 
   annotation: ${paths.work_dir}/annotation/cirr/cap.rc2.test1.json
   img_dirs: ${paths.datasets_dir}/CIRR/images/test1
-  emb_dirs: ${paths.datasets_dir}/CIRR/blip-embs-pretrain/test1
+  emb_dirs: ${paths.datasets_dir}/CIRR/blip-embs256-pretrain/test1
 
   image_size: 224
