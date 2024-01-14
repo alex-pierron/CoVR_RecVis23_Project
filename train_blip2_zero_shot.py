@@ -7,7 +7,6 @@ import lightning as L
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 
-from src.test.utils_blip2_v3 import evaluate_blip2
 from src.tools.files import json_dump
 from src.tools.utils import calculate_model_params
 
@@ -39,35 +38,9 @@ def main(cfg: DictConfig):
 
     fabric.print("Start training")
     start_time = time.time()
-    for epoch in range(cfg.trainer.max_epochs):
-        scheduler(optimizer, epoch)
-
-        columns = shutil.get_terminal_size().columns
-        fabric.print("-" * columns)
-        fabric.print(f"Epoch {epoch + 1}/{cfg.trainer.max_epochs}".center(columns))
-
-        train(model, loader_train, optimizer, fabric, epoch, cfg)
-
-        if cfg.val:
-            fabric.print("Evaluate")
-            evaluate_blip2(model, loader_val, fabric=fabric)
-
-        state = {
-            "epoch": epoch,
-            "model": model,
-            "optimizer": optimizer,
-            "scheduler": scheduler,
-        }
-        if cfg.trainer.save_ckpt == "all":
-            fabric.save(f"ckpt_{epoch}.ckpt", state)
-        elif cfg.trainer.save_ckpt == "last":
-            fabric.save("ckpt_last.ckpt", state)
-
-        fabric.barrier()
-
+    
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-    fabric.print(f"Training time {total_time_str}")
 
     for dataset in cfg.test:
         columns = shutil.get_terminal_size().columns
@@ -86,6 +59,7 @@ def main(cfg: DictConfig):
 
 def train(model, train_loader, optimizer, fabric, epoch, cfg):
     model.train()
+    print(model.training)
     print(optimizer.param_groups[0]["lr"])
     for batch_idx, batch in enumerate(train_loader):
         optimizer.zero_grad()

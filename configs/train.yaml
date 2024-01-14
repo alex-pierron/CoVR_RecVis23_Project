@@ -14,18 +14,18 @@ logger_level: INFO
 # Composing nested config with default
 defaults:
   - _self_
-  - data: cirr_blip2_v3
+  - data: cirr_blip2
   - machine: server
   - trainer: gpu
   - test: all
   - trainer/logger: csv
-  - model: blip2_v2
+  - model: blip2
   - model/optimizer: adamw
   - model/scheduler: cosine
   - model/loss: hn_nce
   #- model/ckpt: blip2_eva_clip_g
 
-  - experiment: cirr_blip2_v3
+  - experiment: cirr_blip2
 
 paths: ${machine.paths}
 

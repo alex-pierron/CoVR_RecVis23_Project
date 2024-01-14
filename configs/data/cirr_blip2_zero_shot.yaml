@@ -1,5 +1,5 @@
-dataname: cirr_blip2_v3
-_target_: src.data.cirr_blip2.CIRRDataModule_blip2
+dataname: cirr_blip2_zero_shot
+_target_: src.data.cirr_blip2_zero_shot.CIRRDataModule_blip2
 
 # Paths
 dataset_dir: ${paths.datasets_dir}/CIRR
@@ -16,7 +16,7 @@ img_dirs:
   val: ${data.dataset_dir}/images/dev
 
 emb_dirs:
-  train: ${data.dataset_dir}/blip-embs256-pretrain/train
-  val: ${data.dataset_dir}/blip-embs256-pretrain/dev
+  train: ${data.dataset_dir}/blip-embs-pretrain/train
+  val: ${data.dataset_dir}/blip-embs-pretrain/dev
 
 image_size: 224
