@@ -55,7 +55,7 @@ class CIRRDataModule(LightningDataModule):
         # things to do on 1 GPU/TPU (not on every GPU/TPU in DDP)
         # download data, pre-process, split, save to disk, etc...
         pass
-    def train_dataloader(self,mode = "contrastive"):
+    def train_dataloader(self,mode = "normal"):
         if mode == "normal":
             return DataLoader(
                 dataset=self.data_train,
