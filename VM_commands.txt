@@ -20,6 +20,7 @@ rm -r CoVR/datasets/CIRR/images/train
 mv images CoVR/datasets/CIRR/images/train
 cd CoVR
 python -m pip install torch
+python -m pip install salesforce-lavis
 python -m pip install torchvision
 python -m pip install pytorch_lightning --upgrade
 python -m pip install hydra-core --upgrade
