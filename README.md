@@ -3,7 +3,7 @@ Final project for the MVA "Object Recognition and Computer Vision" class, 2023.
 ## Summary
 
 In this work, we build upon the baseline established by [Ventura et al.](https://arxiv.org/abs/2308.14746) for Composed Video Retrieval (CoVR). 
-Our work strives to enhance their results in Composed Image Retrieval (CoIR). Leveraging their insights, we have made straightforward yet promising improvements, particularly in training methodologies and network architecture. Our code is publicly available on GitHub at [CoVR_RecVis23_Project](https://github.com/AP496/CoVR_RecVis23_Project/tree/main).
+Our work strives to enhance their results in Composed Image Retrieval (CoIR). Leveraging their insights, we have made straightforward yet promising improvements, particularly in training methodologies and network architecture. 
 
 ## Key Contributions
 
